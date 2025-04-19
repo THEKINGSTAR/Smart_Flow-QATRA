@@ -9,17 +9,26 @@ import MyReportsPage from "@/pages/my-reports-page";
 import AuthPage from "@/pages/auth-page";
 import LearnPage from "@/pages/learn-page";
 import AchievementsPage from "@/pages/achievements-page";
+import LandingPage from "@/pages/landing-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={MapPage} />
+      <Route path="/" component={LandingPage} />
+      <Route path="/map" component={MapPage} />
       <ProtectedRoute path="/my-reports" component={MyReportsPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/learn" component={LearnPage} />
       <ProtectedRoute path="/achievements" component={AchievementsPage} />
+      <Route path="/admin">
+        {() => {
+          // Redirect to admin dashboard
+          window.location.href = "/admin/";
+          return null;
+        }}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

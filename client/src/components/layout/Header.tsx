@@ -51,6 +51,13 @@ export default function Header() {
             <li>
               <Link href="/">
                 <a className={`${location === "/" ? "text-primary-700 font-medium" : "text-neutral-600 hover:text-primary-700"}`}>
+                  Home
+                </a>
+              </Link>
+            </li>
+            <li>
+              <Link href="/map">
+                <a className={`${location === "/map" ? "text-primary-700 font-medium" : "text-neutral-600 hover:text-primary-700"}`}>
                   Map
                 </a>
               </Link>
@@ -113,7 +120,8 @@ export default function Header() {
                           <div className="flex flex-col">
                             <div className="text-sm">{notification.content}</div>
                             <div className="text-xs text-neutral-500 mt-1">
-                              {new Date(notification.createdAt).toLocaleDateString()} at {new Date(notification.createdAt).toLocaleTimeString()}
+                              {notification.createdAt ? new Date(notification.createdAt).toLocaleDateString() : 'Unknown date'} 
+                              {notification.createdAt ? ` at ${new Date(notification.createdAt).toLocaleTimeString()}` : ''}
                             </div>
                           </div>
                         </DropdownMenuItem>
