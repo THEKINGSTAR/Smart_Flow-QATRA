@@ -1,0 +1,63 @@
+Create a full-stack SmartFlow Decision-Making Platform that receives leak reports from an existing reporting app.
+
+🏗️ Architecture:
+- Backend: Node.js + Express + MongoDB (Mongoose)
+- Frontend: React.js + TailwindCSS (or Material UI) + Recharts + Leaflet
+- Auth: JWT with role-based access control (Admin, Analyst, Planner, Inspector)
+- Use CORS to allow API calls from the original reporting app
+- Use dotenv for secrets and API keys
+
+🧠 Core Features:
+1. Sync reports from the SmartFlow Reporting App via `/api/v1/reports/feed`
+2. Authenticate users and assign roles
+3. Render a real-time dashboard with:
+   - Total new reports (last 24h / 7d)
+   - Resolved vs unresolved leaks
+   - Reports by zone (table + map)
+4. Zone-level map view with filters (open, resolved, urgent)
+5. Resource allocation view to assign inspection teams by zone
+6. Decision module:
+   - Show high-priority zones (leak score calculation)
+   - Simulate intervention impact
+7. Insights screen with charts:
+   - Monthly trends
+   - Resolution time histograms
+   - Leak density heatmaps
+
+🔐 User Roles:
+- Admin: full access to all dashboards and user/zone management
+- Analyst: access dashboards and trends
+- Planner: assign field crews, manage priority zones
+- Inspector: view assigned tasks and mark status
+
+📦 API Endpoints (Backend):
+- `GET /api/dashboard/summary` — KPIs for dashboard
+- `GET /api/reports/zone/:zoneId` — Reports by zone
+- `GET /api/reports/high-priority` — Suggested zones for intervention
+- `PUT /api/reports/:id/status` — Update report status
+- `POST /api/users/login` and `/signup` — Auth
+- `GET /api/users/me` — Profile + role
+
+🧩 Components (Frontend):
+- Dashboard.jsx
+- ZoneMap.jsx
+- ResourceAllocation.jsx
+- HighPriorityPlanner.jsx
+- InsightsPanel.jsx
+- Login.jsx
+- RoleBasedRouting.jsx
+
+📊 Libraries:
+- Axios for API calls
+- Recharts for graphs
+- Leaflet for maps
+- bcrypt + JWT for authentication
+- Express-rate-limit for basic protection
+
+🌍 Admin Panel Add-ons (optional later):
+- User management UI
+- Export reports to CSV
+- Notification triggers (email/SMS/webhook placeholder)
+
+Ensure proper error handling, spinner/loading states, and a clean responsive UI.
+Seed some dummy report data if no live connection is established yet.

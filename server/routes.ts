@@ -1,9 +1,18 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { z } from "zod";
-import { insertReportSchema, insertOfflineReportSchema } from "@shared/schema";
+import { 
+  insertReportSchema, 
+  insertOfflineReportSchema,
+  insertZoneSchema,
+  insertTeamSchema,
+  insertTeamAssignmentSchema,
+  insertReportToZoneSchema,
+  insertAdminUserSchema,
+  AdminUser
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication endpoints
@@ -195,6 +204,244 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin dashboard middleware to check if user is admin
+  const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      // Check if user has admin role
+      const adminUser = await storage.getAdminUser(req.user.id);
+      if (!adminUser) {
+        return res.status(403).json({ message: "Forbidden: Admin access required" });
+      }
+      
+      // Add the admin user to the request
+      (req as any).adminUser = adminUser;
+      next();
+    } catch (error) {
+      res.status(500).json({ message: "Server error checking admin access" });
+    }
+  };
+
+  // Admin role-based middleware
+  const hasRole = (allowedRoles: string[]) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const adminUser = (req as any).adminUser as AdminUser;
+        if (!adminUser) {
+          return res.status(403).json({ message: "Forbidden: Admin access required" });
+        }
+        
+        if (allowedRoles.includes(adminUser.role) || adminUser.role === 'admin' || adminUser.isSuperAdmin) {
+          next();
+        } else {
+          res.status(403).json({ 
+            message: `Forbidden: Required role (${allowedRoles.join(', ')}) not found`,
+            yourRole: adminUser.role
+          });
+        }
+      } catch (error) {
+        res.status(500).json({ message: "Server error checking role permissions" });
+      }
+    };
+  };
+
+  // ADMIN ROUTES
+
+  // Admin Authentication
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      // User should already be authenticated by Passport
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Check if user has admin role
+      const adminUser = await storage.getAdminUser(req.user.id);
+      if (!adminUser) {
+        return res.status(403).json({ message: "Access denied: Not an admin user" });
+      }
+      
+      // Return admin user info
+      res.json({ 
+        ...req.user,
+        adminRole: adminUser.role,
+        isSuperAdmin: adminUser.isSuperAdmin
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to process admin login" });
+    }
+  });
+
+  app.post("/api/admin/register", async (req, res) => {
+    try {
+      // User should already be registered and authenticated by the regular auth flow
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "User must be authenticated" });
+      }
+      
+      // Check if already an admin user
+      const existingAdmin = await storage.getAdminUser(req.user.id);
+      if (existingAdmin) {
+        return res.status(400).json({ message: "User is already an admin" });
+      }
+      
+      // Validate admin user data
+      const validatedData = insertAdminUserSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      
+      // Create admin user
+      const adminUser = await storage.createAdminUser(validatedData);
+      res.status(201).json({ 
+        ...req.user,
+        adminRole: adminUser.role,
+        isSuperAdmin: adminUser.isSuperAdmin
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid admin data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to register admin user" });
+    }
+  });
+
+  // Admin Dashboard
+  app.get("/api/admin/dashboard/summary", isAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch dashboard stats" });
+    }
+  });
+
+  // Zones management
+  app.get("/api/admin/zones", isAdmin, async (req, res) => {
+    try {
+      const zones = await storage.getAllZones();
+      res.json(zones);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch zones" });
+    }
+  });
+
+  app.post("/api/admin/zones", isAdmin, hasRole(['admin', 'planner']), async (req, res) => {
+    try {
+      const validatedData = insertZoneSchema.parse(req.body);
+      const zone = await storage.createZone(validatedData);
+      res.status(201).json(zone);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid zone data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create zone" });
+    }
+  });
+
+  app.get("/api/admin/zones/:id", isAdmin, async (req, res) => {
+    try {
+      const zone = await storage.getZone(parseInt(req.params.id));
+      if (!zone) {
+        return res.status(404).json({ message: "Zone not found" });
+      }
+      res.json(zone);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch zone" });
+    }
+  });
+
+  app.patch("/api/admin/zones/:id/priority", isAdmin, hasRole(['admin', 'planner']), async (req, res) => {
+    try {
+      const { priority } = req.body;
+      if (typeof priority !== 'number') {
+        return res.status(400).json({ message: "Invalid priority value" });
+      }
+      
+      const zone = await storage.updateZonePriority(parseInt(req.params.id), priority);
+      if (!zone) {
+        return res.status(404).json({ message: "Zone not found" });
+      }
+      
+      res.json(zone);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update zone priority" });
+    }
+  });
+
+  // Teams management
+  app.get("/api/admin/teams", isAdmin, async (req, res) => {
+    try {
+      const teams = await storage.getAllTeams();
+      res.json(teams);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch teams" });
+    }
+  });
+
+  app.post("/api/admin/teams", isAdmin, hasRole(['admin', 'planner']), async (req, res) => {
+    try {
+      const validatedData = insertTeamSchema.parse(req.body);
+      const team = await storage.createTeam(validatedData);
+      res.status(201).json(team);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid team data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create team" });
+    }
+  });
+
+  // Team assignments
+  app.post("/api/admin/team-assignments", isAdmin, hasRole(['admin', 'planner']), async (req, res) => {
+    try {
+      const validatedData = insertTeamAssignmentSchema.parse(req.body);
+      const assignment = await storage.createTeamAssignment(validatedData);
+      res.status(201).json(assignment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid assignment data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create team assignment" });
+    }
+  });
+
+  app.patch("/api/admin/team-assignments/:id/status", isAdmin, hasRole(['admin', 'planner', 'inspector']), async (req, res) => {
+    try {
+      const { status } = req.body;
+      if (!status || !['assigned', 'in-progress', 'completed'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+      
+      const assignment = await storage.updateTeamAssignmentStatus(parseInt(req.params.id), status);
+      if (!assignment) {
+        return res.status(404).json({ message: "Assignment not found" });
+      }
+      
+      res.json(assignment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update assignment status" });
+    }
+  });
+
+  // Report to zone assignments
+  app.post("/api/admin/report-zones", isAdmin, hasRole(['admin', 'planner']), async (req, res) => {
+    try {
+      const validatedData = insertReportToZoneSchema.parse(req.body);
+      const reportZone = await storage.assignReportToZone(validatedData);
+      res.status(201).json(reportZone);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid report zone data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to assign report to zone" });
+    }
+  });
+
+  // Create the HTTP server
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -3,7 +3,10 @@ import {
   Tip, InsertTip, Achievement, InsertAchievement,
   UserAchievement, InsertUserAchievement, Notification, InsertNotification,
   OfflineReport, InsertOfflineReport,
-  users, reports, tips, achievements, userAchievements, notifications, offlineReports
+  Zone, InsertZone, Team, InsertTeam, TeamAssignment, InsertTeamAssignment,
+  ReportToZone, InsertReportToZone, AdminUser, InsertAdminUser,
+  users, reports, tips, achievements, userAchievements, notifications, offlineReports,
+  zones, teams, teamAssignments, reportsToZones, adminUsers
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -54,6 +57,32 @@ export interface IStorage {
   createNotification(notification: InsertNotification): Promise<Notification>;
   getUserNotifications(userId: number): Promise<Notification[]>;
   markNotificationAsRead(id: number): Promise<Notification | undefined>;
+  
+  // Admin dashboard operations
+  
+  // Admin user operations
+  getAdminUser(userId: number): Promise<AdminUser | undefined>;
+  createAdminUser(adminUser: InsertAdminUser): Promise<AdminUser>;
+  
+  // Dashboard statistics
+  getDashboardStats(): Promise<any>; // Returns statistics for the admin dashboard
+  
+  // Zone operations
+  getAllZones(): Promise<Zone[]>;
+  getZone(id: number): Promise<Zone | undefined>;
+  createZone(zone: InsertZone): Promise<Zone>;
+  updateZonePriority(id: number, priority: number): Promise<Zone | undefined>;
+  
+  // Team operations
+  getAllTeams(): Promise<Team[]>;
+  createTeam(team: InsertTeam): Promise<Team>;
+  
+  // Team assignment operations
+  createTeamAssignment(assignment: InsertTeamAssignment): Promise<TeamAssignment>;
+  updateTeamAssignmentStatus(id: number, status: string): Promise<TeamAssignment | undefined>;
+  
+  // Report to zone assignment
+  assignReportToZone(reportZone: InsertReportToZone): Promise<ReportToZone>;
 }
 
 // In-memory implementation of the storage interface
@@ -66,6 +95,13 @@ export class MemStorage implements IStorage {
   private userAchievements: Map<number, UserAchievement>;
   private notifications: Map<number, Notification>;
   
+  // Admin dashboard data
+  private adminUsers: Map<number, AdminUser>;
+  private zones: Map<number, Zone>;
+  private teams: Map<number, Team>;
+  private teamAssignments: Map<number, TeamAssignment>;
+  private reportsToZones: Map<number, ReportToZone>;
+  
   sessionStore: session.Store;
   
   currentUserId: number;
@@ -75,6 +111,11 @@ export class MemStorage implements IStorage {
   currentAchievementId: number;
   currentUserAchievementId: number;
   currentNotificationId: number;
+  currentAdminUserId: number;
+  currentZoneId: number;
+  currentTeamId: number;
+  currentTeamAssignmentId: number;
+  currentReportToZoneId: number;
 
   constructor() {
     this.users = new Map();
@@ -84,6 +125,13 @@ export class MemStorage implements IStorage {
     this.achievements = new Map();
     this.userAchievements = new Map();
     this.notifications = new Map();
+    
+    // Initialize admin dashboard data maps
+    this.adminUsers = new Map();
+    this.zones = new Map();
+    this.teams = new Map();
+    this.teamAssignments = new Map();
+    this.reportsToZones = new Map();
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
@@ -96,6 +144,11 @@ export class MemStorage implements IStorage {
     this.currentAchievementId = 1;
     this.currentUserAchievementId = 1;
     this.currentNotificationId = 1;
+    this.currentAdminUserId = 1;
+    this.currentZoneId = 1;
+    this.currentTeamId = 1;
+    this.currentTeamAssignmentId = 1;
+    this.currentReportToZoneId = 1;
     
     // Initialize with default educational tips
     this.initializeDefaultData();
@@ -450,6 +503,197 @@ export class MemStorage implements IStorage {
     
     this.notifications.set(id, updatedNotification);
     return updatedNotification;
+  }
+
+  // Admin user operations
+  async getAdminUser(userId: number): Promise<AdminUser | undefined> {
+    return Array.from(this.adminUsers.values()).find(
+      (adminUser) => adminUser.userId === userId
+    );
+  }
+
+  async createAdminUser(adminUser: InsertAdminUser): Promise<AdminUser> {
+    const id = this.currentAdminUserId++;
+    
+    const newAdminUser: AdminUser = {
+      ...adminUser,
+      id
+    };
+    
+    this.adminUsers.set(id, newAdminUser);
+    return newAdminUser;
+  }
+
+  // Dashboard statistics
+  async getDashboardStats(): Promise<any> {
+    const allReports = await this.getAllReports();
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    // Count reports from last 24 hours
+    const reportsLast24h = allReports.filter(
+      report => report.createdAt && report.createdAt >= oneDayAgo
+    ).length;
+    
+    // Count reports from last 7 days
+    const reportsLast7d = allReports.filter(
+      report => report.createdAt && report.createdAt >= sevenDaysAgo
+    ).length;
+    
+    // Count resolved reports
+    const resolvedReports = allReports.filter(
+      report => report.status === 'resolved'
+    ).length;
+    
+    // Count unresolved reports
+    const unresolvedReports = allReports.filter(
+      report => report.status !== 'resolved'
+    ).length;
+    
+    // Count critical reports
+    const criticalReports = allReports.filter(
+      report => report.severity === 'critical'
+    ).length;
+    
+    // Get zone stats
+    const zones = await this.getAllZones();
+    const zoneStats = await Promise.all(zones.map(async zone => {
+      const zoneReports = await this.getReportsByZone(zone.id);
+      const unresolvedCount = zoneReports.filter(r => r.status !== 'resolved').length;
+      const criticalCount = zoneReports.filter(r => r.severity === 'critical').length;
+      
+      return {
+        id: zone.id,
+        name: zone.name,
+        reportCount: zoneReports.length,
+        unresolvedCount,
+        criticalCount
+      };
+    }));
+    
+    return {
+      totalReports: allReports.length,
+      reportsLast24h,
+      reportsLast7d,
+      resolvedReports,
+      unresolvedReports,
+      criticalReports,
+      zones: zoneStats
+    };
+  }
+
+  // Helper method to get reports by zone
+  private async getReportsByZone(zoneId: number): Promise<Report[]> {
+    // Get report IDs in this zone
+    const reportIds = Array.from(this.reportsToZones.values())
+      .filter(rtz => rtz.zoneId === zoneId)
+      .map(rtz => rtz.reportId);
+    
+    // Get the reports
+    return Array.from(this.reports.values())
+      .filter(report => reportIds.includes(report.id));
+  }
+
+  // Zone operations
+  async getAllZones(): Promise<Zone[]> {
+    return Array.from(this.zones.values());
+  }
+
+  async getZone(id: number): Promise<Zone | undefined> {
+    return this.zones.get(id);
+  }
+
+  async createZone(zone: InsertZone): Promise<Zone> {
+    const id = this.currentZoneId++;
+    
+    const newZone: Zone = {
+      ...zone,
+      id,
+      createdAt: new Date()
+    };
+    
+    this.zones.set(id, newZone);
+    return newZone;
+  }
+
+  async updateZonePriority(id: number, priority: number): Promise<Zone | undefined> {
+    const zone = this.zones.get(id);
+    
+    if (!zone) {
+      return undefined;
+    }
+    
+    const updatedZone: Zone = {
+      ...zone,
+      priority
+    };
+    
+    this.zones.set(id, updatedZone);
+    return updatedZone;
+  }
+
+  // Team operations
+  async getAllTeams(): Promise<Team[]> {
+    return Array.from(this.teams.values());
+  }
+
+  async createTeam(team: InsertTeam): Promise<Team> {
+    const id = this.currentTeamId++;
+    
+    const newTeam: Team = {
+      ...team,
+      id,
+      createdAt: new Date()
+    };
+    
+    this.teams.set(id, newTeam);
+    return newTeam;
+  }
+
+  // Team assignment operations
+  async createTeamAssignment(assignment: InsertTeamAssignment): Promise<TeamAssignment> {
+    const id = this.currentTeamAssignmentId++;
+    
+    const newAssignment: TeamAssignment = {
+      ...assignment,
+      id,
+      status: 'assigned',
+      createdAt: new Date()
+    };
+    
+    this.teamAssignments.set(id, newAssignment);
+    return newAssignment;
+  }
+
+  async updateTeamAssignmentStatus(id: number, status: string): Promise<TeamAssignment | undefined> {
+    const assignment = this.teamAssignments.get(id);
+    
+    if (!assignment) {
+      return undefined;
+    }
+    
+    const updatedAssignment: TeamAssignment = {
+      ...assignment,
+      status
+    };
+    
+    this.teamAssignments.set(id, updatedAssignment);
+    return updatedAssignment;
+  }
+
+  // Report to zone assignment
+  async assignReportToZone(reportZone: InsertReportToZone): Promise<ReportToZone> {
+    const id = this.currentReportToZoneId++;
+    
+    const newReportToZone: ReportToZone = {
+      ...reportZone,
+      id,
+      createdAt: new Date()
+    };
+    
+    this.reportsToZones.set(id, newReportToZone);
+    return newReportToZone;
   }
 }
 
@@ -815,6 +1059,221 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return updatedNotification;
+  }
+
+  // Admin user operations
+  async getAdminUser(userId: number): Promise<AdminUser | undefined> {
+    const result = await db
+      .select()
+      .from(adminUsers)
+      .where(eq(adminUsers.userId, userId));
+    return result[0];
+  }
+
+  async createAdminUser(adminUser: InsertAdminUser): Promise<AdminUser> {
+    const [newAdminUser] = await db
+      .insert(adminUsers)
+      .values({
+        userId: adminUser.userId,
+        role: adminUser.role,
+        isSuperAdmin: adminUser.isSuperAdmin || false,
+        createdAt: new Date() // Add the required createdAt field
+      })
+      .returning();
+    return newAdminUser;
+  }
+
+  // Dashboard statistics
+  async getDashboardStats(): Promise<any> {
+    const allReports = await this.getAllReports();
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    // Count reports from last 24 hours
+    const reportsLast24h = allReports.filter(
+      report => report.createdAt && report.createdAt >= oneDayAgo
+    ).length;
+    
+    // Count reports from last 7 days
+    const reportsLast7d = allReports.filter(
+      report => report.createdAt && report.createdAt >= sevenDaysAgo
+    ).length;
+    
+    // Count resolved reports
+    const resolvedReports = allReports.filter(
+      report => report.status === 'resolved'
+    ).length;
+    
+    // Count unresolved reports
+    const unresolvedReports = allReports.filter(
+      report => report.status !== 'resolved'
+    ).length;
+    
+    // Count critical reports
+    const criticalReports = allReports.filter(
+      report => report.severity === 'critical'
+    ).length;
+    
+    // Get zone stats
+    const zones = await this.getAllZones();
+    const zoneStats = await Promise.all(zones.map(async zone => {
+      const zoneReports = await this.getReportsByZone(zone.id);
+      const unresolvedCount = zoneReports.filter(r => r.status !== 'resolved').length;
+      const criticalCount = zoneReports.filter(r => r.severity === 'critical').length;
+      
+      return {
+        id: zone.id,
+        name: zone.name,
+        reportCount: zoneReports.length,
+        unresolvedCount,
+        criticalCount
+      };
+    }));
+    
+    return {
+      totalReports: allReports.length,
+      reportsLast24h,
+      reportsLast7d,
+      resolvedReports,
+      unresolvedReports,
+      criticalReports,
+      zones: zoneStats
+    };
+  }
+
+  // Helper method to get reports by zone
+  private async getReportsByZone(zoneId: number): Promise<Report[]> {
+    // Get report IDs in this zone from the reports_to_zones table
+    const reportToZoneRows = await db
+      .select()
+      .from(reportsToZones)
+      .where(eq(reportsToZones.zoneId, zoneId));
+    
+    if (reportToZoneRows.length === 0) {
+      return [];
+    }
+    
+    const reportIds = reportToZoneRows.map(rtz => rtz.reportId);
+    
+    // Get the reports
+    return await db
+      .select()
+      .from(reports)
+      .where(
+        reportIds.map(id => eq(reports.id, id)).reduce((prev, curr) => prev || curr)
+      );
+  }
+
+  // Zone operations
+  async getAllZones(): Promise<Zone[]> {
+    return await db.select().from(zones);
+  }
+
+  async getZone(id: number): Promise<Zone | undefined> {
+    const result = await db.select().from(zones).where(eq(zones.id, id));
+    return result[0];
+  }
+
+  async createZone(zone: InsertZone): Promise<Zone> {
+    const [newZone] = await db
+      .insert(zones)
+      .values({
+        ...zone,
+        createdAt: new Date(),
+        updatedAt: new Date() // Add the required updatedAt field
+      })
+      .returning();
+    return newZone;
+  }
+
+  async updateZonePriority(id: number, priority: number): Promise<Zone | undefined> {
+    const zone = await this.getZone(id);
+    
+    if (!zone) {
+      return undefined;
+    }
+    
+    const [updatedZone] = await db
+      .update(zones)
+      .set({ priority })
+      .where(eq(zones.id, id))
+      .returning();
+    
+    return updatedZone;
+  }
+
+  // Team operations
+  async getAllTeams(): Promise<Team[]> {
+    return await db.select().from(teams);
+  }
+
+  async createTeam(team: InsertTeam): Promise<Team> {
+    const [newTeam] = await db
+      .insert(teams)
+      .values({
+        ...team,
+        createdAt: new Date(),
+        description: team.description || null,
+        contact: team.contact || null,
+        memberCount: team.memberCount || null
+      })
+      .returning();
+    return newTeam;
+  }
+
+  // Team assignment operations
+  async createTeamAssignment(assignment: InsertTeamAssignment): Promise<TeamAssignment> {
+    // Ensure we have all required fields and correct types
+    const newTeamAssignment = {
+      teamId: assignment.teamId,
+      zoneId: assignment.zoneId,
+      status: assignment.status || 'assigned',
+      startDate: assignment.startDate || new Date(),
+      endDate: assignment.endDate || null,
+      notes: assignment.notes || null
+    };
+    
+    const [newAssignment] = await db
+      .insert(teamAssignments)
+      .values(newTeamAssignment)
+      .returning();
+    return newAssignment;
+  }
+
+  async updateTeamAssignmentStatus(id: number, status: string): Promise<TeamAssignment | undefined> {
+    const assignment = await db
+      .select()
+      .from(teamAssignments)
+      .where(eq(teamAssignments.id, id));
+    
+    if (assignment.length === 0) {
+      return undefined;
+    }
+    
+    const [updatedAssignment] = await db
+      .update(teamAssignments)
+      .set({ status })
+      .where(eq(teamAssignments.id, id))
+      .returning();
+    
+    return updatedAssignment;
+  }
+
+  // Report to zone assignment
+  async assignReportToZone(reportZone: InsertReportToZone): Promise<ReportToZone> {
+    // Use only the properties that exist in the schema
+    const newReportZone = {
+      reportId: reportZone.reportId,
+      zoneId: reportZone.zoneId,
+      assignedAt: new Date() // Set the assignedAt field
+    };
+    
+    const [newReportToZone] = await db
+      .insert(reportsToZones)
+      .values(newReportZone)
+      .returning();
+    return newReportToZone;
   }
 }
 
