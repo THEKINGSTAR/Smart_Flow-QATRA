@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InsertReport } from "@shared/schema";
@@ -51,7 +51,7 @@ export default function ReportForm({ onSubmit, onCancel, loading }: ReportFormPr
   });
 
   // Update form when geolocation changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (position && address) {
       form.setValue("latitude", position.latitude.toString());
       form.setValue("longitude", position.longitude.toString());
@@ -67,7 +67,7 @@ export default function ReportForm({ onSubmit, onCancel, loading }: ReportFormPr
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newPhotos: string[] = [];
       
