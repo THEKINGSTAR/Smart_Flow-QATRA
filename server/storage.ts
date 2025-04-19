@@ -673,10 +673,23 @@ export class DatabaseStorage implements IStorage {
     const achievementIds = userAchievementEntries.map(entry => entry.achievementId);
     
     // Get all those achievements
-    return await db
-      .select()
-      .from(achievements)
-      .where(achievements.id.in(achievementIds));
+    // If we have achievement IDs to look up
+    if (achievementIds.length > 0) {
+      // Use a different approach since .in() might not be available
+      const results = [];
+      for (const id of achievementIds) {
+        const [achievement] = await db
+          .select()
+          .from(achievements)
+          .where(eq(achievements.id, id));
+        
+        if (achievement) {
+          results.push(achievement);
+        }
+      }
+      return results;
+    }
+    return [];
   }
 
   async awardAchievement(userAchievement: InsertUserAchievement): Promise<UserAchievement> {
