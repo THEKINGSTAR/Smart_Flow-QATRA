@@ -10,6 +10,7 @@ import AuthPage from "@/pages/auth-page";
 import LearnPage from "@/pages/learn-page";
 import AchievementsPage from "@/pages/achievements-page";
 import LandingPage from "@/pages/landing-page";
+import AdminPlaceholderPage from "@/pages/admin-placeholder-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 
@@ -22,7 +23,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/learn" component={LearnPage} />
       <ProtectedRoute path="/achievements" component={AchievementsPage} />
-      {/* Admin redirect handled directly in landing page */}
+      <Route path="/admin" component={AdminPlaceholderPage} />
       <Route component={NotFound} />
     </Switch>
   );

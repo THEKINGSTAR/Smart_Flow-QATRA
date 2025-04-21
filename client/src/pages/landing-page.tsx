@@ -77,11 +77,11 @@ export default function LandingPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <a href="/admin/index.html" className="w-full">
+              <Link href="/admin">
                 <Button className="w-full bg-teal-600 hover:bg-teal-700">
                   Access Administration Dashboard
                 </Button>
-              </a>
+              </Link>
             </CardFooter>
           </Card>
         </div>
