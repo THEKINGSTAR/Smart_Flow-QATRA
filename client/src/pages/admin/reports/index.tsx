@@ -19,13 +19,24 @@ import {
 } from "lucide-react";
 import { Report } from "@shared/schema";
 
+// Enhanced Report type to accommodate all the data we need
+interface EnhancedReport extends Report {
+  location?: string; // For display purposes, will be derived from address
+}
+
 export default function AdminReports() {
   const [searchQuery, setSearchQuery] = useState("");
   
   // Fetch reports data
-  const { data: reports, isLoading } = useQuery<Report[]>({
+  const { data: rawReports, isLoading } = useQuery<Report[]>({
     queryKey: ["/api/reports"],
   });
+  
+  // Process reports to add the location property
+  const reports = rawReports?.map(report => ({
+    ...report,
+    location: report.address // Use address as location
+  } as EnhancedReport));
 
   // Filter reports based on search query
   const filteredReports = reports?.filter((report) => 
@@ -195,7 +206,7 @@ export default function AdminReports() {
                         <TableCell>
                           <div className="flex items-center text-muted-foreground">
                             <CalendarIcon className="h-3.5 w-3.5 mr-1" />
-                            {new Date(report.createdAt).toLocaleDateString()}
+                            {report.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'Unknown'}
                           </div>
                         </TableCell>
                         <TableCell>
