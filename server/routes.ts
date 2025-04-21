@@ -310,12 +310,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin Dashboard
-  app.get("/api/admin/dashboard/summary", isAdmin, async (req, res) => {
+  app.get("/api/admin/dashboard", isAdmin, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
-      res.json(stats);
+      
+      // Get additional data for dashboard
+      const reports = await storage.getAllReports();
+      const zones = await storage.getAllZones();
+      const teams = await storage.getAllTeams();
+      
+      // Calculate key metrics
+      const totalReports = reports.length;
+      const pendingReports = reports.filter(r => r.status !== 'resolved').length;
+      const resolvedReports = reports.filter(r => r.status === 'resolved').length;
+      const criticalReports = reports.filter(r => r.severity === 'critical').length;
+      
+      // Return combined dashboard data
+      res.json({
+        totalReports,
+        pendingReports,
+        resolvedReports,
+        criticalReports,
+        totalZones: zones.length,
+        totalTeams: teams.length,
+        recentReports: reports.slice(0, 5),  // Last 5 reports
+        stats
+      });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch dashboard stats" });
+      res.status(500).json({ message: "Failed to fetch dashboard data" });
     }
   });
 
