@@ -1,7 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 
+import { useEffect } from "react";
+import { useLocation } from "wouter";
+
 export default function AdminPlaceholderPage() {
+  const [, setLocation] = useLocation();
+  
+  // Redirect to the dashboard
+  useEffect(() => {
+    // We'll redirect to the actual dashboard page after a short delay
+    const timer = setTimeout(() => {
+      setLocation("/admin/dashboard");
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [setLocation]);
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-teal-900 p-6 flex flex-col items-center">
       <div className="max-w-4xl mx-auto w-full">
