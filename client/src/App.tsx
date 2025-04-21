@@ -18,7 +18,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminReports from "@/pages/admin/reports";
 import AdminTeams from "@/pages/admin/teams";
-import AdminZones from "@/pages/admin/zones";
+import ZonesPage from "@/pages/admin/zones";
 import AdminAnalytics from "@/pages/admin/analytics";
 
 function Router() {
@@ -37,7 +37,7 @@ function Router() {
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/admin/reports" component={AdminReports} />
       <Route path="/admin/teams" component={AdminTeams} />
-      <Route path="/admin/zones" component={AdminZones} />
+      <Route path="/admin/zones" component={ZonesPage} />
       <Route path="/admin/analytics" component={AdminAnalytics} />
       
       {/* 404 route */}
