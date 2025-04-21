@@ -22,10 +22,26 @@ import {
 } from "lucide-react";
 
 export function DashboardPage() {
+  // Define the dashboard stats type
+  interface DashboardStats {
+    totalReports: number;
+    pendingReports: number;
+    resolvedReports: number;
+    criticalReports: number;
+  }
+  
   // Fetch data from API
-  const { data: dashboardStats, isLoading } = useQuery({
+  const { data: dashboardStats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/admin/dashboard"],
   });
+  
+  // Default stats when data is not available
+  const stats = dashboardStats || {
+    totalReports: 0,
+    pendingReports: 0,
+    resolvedReports: 0,
+    criticalReports: 0
+  };
 
   return (
     <AdminLayout>
@@ -55,7 +71,7 @@ export function DashboardPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Reports</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardStats?.totalReports || 0}</div>
+            <div className="text-2xl font-bold">{stats.totalReports}</div>
             <p className="text-xs text-muted-foreground mt-1">
               <span className="text-green-500">+16%</span> since last month
             </p>
@@ -70,7 +86,7 @@ export function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardStats?.pendingReports || 0}</div>
+            <div className="text-2xl font-bold">{stats.pendingReports}</div>
             <p className="text-xs text-muted-foreground mt-1">
               <span className="text-amber-500">+5</span> new today
             </p>
@@ -85,7 +101,7 @@ export function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardStats?.resolvedReports || 0}</div>
+            <div className="text-2xl font-bold">{stats.resolvedReports}</div>
             <p className="text-xs text-muted-foreground mt-1">
               <span className="text-green-500">+8</span> in the last 7 days
             </p>
@@ -100,7 +116,7 @@ export function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardStats?.criticalReports || 0}</div>
+            <div className="text-2xl font-bold">{stats.criticalReports}</div>
             <p className="text-xs text-muted-foreground mt-1">
               <span className="text-red-500">2</span> require immediate action
             </p>

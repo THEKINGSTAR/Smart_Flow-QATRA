@@ -14,16 +14,33 @@ import AdminPlaceholderPage from "@/pages/admin-placeholder-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 
+// Admin Dashboard imports
+import AdminDashboard from "@/pages/admin/dashboard";
+import AdminReports from "@/pages/admin/reports";
+import AdminTeams from "@/pages/admin/teams";
+import AdminZones from "@/pages/admin/zones";
+import AdminAnalytics from "@/pages/admin/analytics";
+
 function Router() {
   return (
     <Switch>
+      {/* Main application routes */}
       <Route path="/" component={LandingPage} />
       <Route path="/map" component={MapPage} />
       <ProtectedRoute path="/my-reports" component={MyReportsPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/learn" component={LearnPage} />
       <ProtectedRoute path="/achievements" component={AchievementsPage} />
+      
+      {/* Admin routes */}
       <Route path="/admin" component={AdminPlaceholderPage} />
+      <Route path="/admin/dashboard" component={AdminDashboard} />
+      <Route path="/admin/reports" component={AdminReports} />
+      <Route path="/admin/teams" component={AdminTeams} />
+      <Route path="/admin/zones" component={AdminZones} />
+      <Route path="/admin/analytics" component={AdminAnalytics} />
+      
+      {/* 404 route */}
       <Route component={NotFound} />
     </Switch>
   );
