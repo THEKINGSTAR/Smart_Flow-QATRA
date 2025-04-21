@@ -22,13 +22,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/learn" component={LearnPage} />
       <ProtectedRoute path="/achievements" component={AchievementsPage} />
-      <Route path="/admin">
-        {() => {
-          // Redirect to admin dashboard
-          window.location.href = "/admin/";
-          return null;
-        }}
-      </Route>
+      {/* Admin redirect handled directly in landing page */}
       <Route component={NotFound} />
     </Switch>
   );
