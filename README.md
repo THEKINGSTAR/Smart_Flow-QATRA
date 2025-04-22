@@ -30,38 +30,49 @@ This platform is designed for **government departments and public water authorit
 
 ## 🧭 Landing Page
 
-![Landing Page](Screens/landing.png)
+<div align="center">
+
+  <img src="Screens/landing.png" width="600"/>
+  
+</div>
 
 ---
 
 ## 🎛️ Admin Dashboard
 
-![Admin Dashboard](Screens/admin_dash-1.png)
-![Admin Dashboard](Screens/admin_dash-1.png)
-![Admin Dashboard](Screens/admin_dash-1.png)
-![Admin Dashboard](Screens/admin_dash-1.png)
-![Admin Dashboard](Screens/admin_dash-1.png)
+<div align="center">
+
+  <img src="Screens/admin_dash-1.png" width="300"  height="180"/>
+  <img src="Screens/admin_dash-2.png" width="300" height="180"/>
+
+  <img src="Screens/admin_dash-3.png" width="300" height="180"/>
+  <img src="Screens/admin_dash-4.png" width="300" height="180"/>
+  
+  <img src="Screens/admin_dash-5.png" width="300" height="180"/>
+  
+</div>
 
 ---
-
-
 
 ## 📱 Reporting App Screenshots
 
 The reporting app enables citizens to capture leaks via text, voice notes, photos, and GPS. Reports are submitted anonymously or with an account.
 
-![Reporting App](Screens/reporting_app-1.jpg) 
-![Reporting App](Screens/reporting_app-2.jpg) 
-![Reporting App](Screens/reporting_app-3.jpg) 
-![Reporting App](Screens/reporting_app-4.jpg) 
-![Reporting App](Screens/reporting_app-5.jpg) 
-![Reporting App](Screens/reporting_app-6.jpg) 
-![Reporting App](Screens/reporting_app-7.jpg) 
-![Reporting App](Screens/reporting_app-8.jpg) 
-![Reporting App](Screens/reporting_app-9.jpg) 
-![Reporting App](Screens/reporting_app-10.jpg) 
-![Reporting App](Screens/reporting_app-11.jpg)
+<div align="center">
 
+
+  <img src="Screens/reporting_app-1.jpg" width="180"  height="320"/>
+  <img src="Screens/reporting_app-3.jpg" width="180" height="320"/>
+  <img src="Screens/reporting_app-4.jpg" width="180" height="320"/>
+  <img src="Screens/reporting_app-5.jpg" width="180" height="320"/>
+  <img src="Screens/reporting_app-6.jpg" width="180" height="320"/>
+  <img src="Screens/reporting_app-7.jpg" width="180" height="320"/>
+  <img src="Screens/reporting_app-8.jpg" width="180" height="320"/>
+  <img src="Screens/reporting_app-9.jpg" width="180" height="320"/>
+  <img src="Screens/reporting_app-10.jpg" width="180" height="320"/>
+  <img src="Screens/reporting_app-11.jpg" width="180" height="320"/>
+
+</div>
 
 ---
 
