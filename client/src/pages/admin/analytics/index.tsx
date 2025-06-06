@@ -1,30 +1,30 @@
-import { useState } from "react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  BarChart3Icon, 
-  TrendingUpIcon, 
-  MapIcon, 
-  CalendarIcon, 
+"use client"
+
+import { useState } from "react"
+import { AdminLayout } from "@/components/admin/AdminLayout"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  BarChart3Icon,
+  TrendingUpIcon,
+  MapIcon,
+  CalendarIcon,
   DownloadIcon,
   ChevronDownIcon,
-  FilterIcon
-} from "lucide-react";
+  FilterIcon,
+} from "lucide-react"
 
 export default function AdminAnalytics() {
-  const [period, setPeriod] = useState("month");
-  
+  const [period, setPeriod] = useState("month")
+
   return (
     <AdminLayout>
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
-          <p className="text-muted-foreground">
-            Analyze water leakage data and trends
-          </p>
+          <p className="text-muted-foreground">Analyze water leakage data and trends</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" className="flex items-center">
@@ -48,7 +48,7 @@ export default function AdminAnalytics() {
             <TabsTrigger value="teams">Teams</TabsTrigger>
           </TabsList>
         </Tabs>
-        
+
         <div className="flex items-center gap-2">
           <Select defaultValue="month" onValueChange={setPeriod}>
             <SelectTrigger className="w-[150px] h-8">
@@ -72,9 +72,7 @@ export default function AdminAnalytics() {
               <TrendingUpIcon className="mr-2 h-5 w-5 text-blue-600" />
               Leakage Reports Trend
             </CardTitle>
-            <CardDescription>
-              Number of reports over time
-            </CardDescription>
+            <CardDescription>Number of reports over time</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] flex items-center justify-center border rounded-md">
@@ -93,9 +91,7 @@ export default function AdminAnalytics() {
               <BarChart3Icon className="mr-2 h-5 w-5 text-indigo-600" />
               Severity Distribution
             </CardTitle>
-            <CardDescription>
-              Reports by severity level
-            </CardDescription>
+            <CardDescription>Reports by severity level</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] flex items-center justify-center border rounded-md">
@@ -116,9 +112,7 @@ export default function AdminAnalytics() {
               <MapIcon className="mr-2 h-5 w-5 text-teal-600" />
               Geographic Distribution
             </CardTitle>
-            <CardDescription>
-              Heat map of leakage reports
-            </CardDescription>
+            <CardDescription>Heat map of leakage reports</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] flex items-center justify-center border rounded-md">
@@ -137,9 +131,7 @@ export default function AdminAnalytics() {
               <CalendarIcon className="mr-2 h-5 w-5 text-amber-600" />
               Resolution Time Analysis
             </CardTitle>
-            <CardDescription>
-              Average time to resolve leakage reports
-            </CardDescription>
+            <CardDescription>Average time to resolve leakage reports</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] flex items-center justify-center border rounded-md">
@@ -156,9 +148,7 @@ export default function AdminAnalytics() {
       <Card>
         <CardHeader>
           <CardTitle>Key Metrics</CardTitle>
-          <CardDescription>
-            Summary of important performance indicators
-          </CardDescription>
+          <CardDescription>Summary of important performance indicators</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -170,7 +160,7 @@ export default function AdminAnalytics() {
                 12% improvement
               </div>
             </div>
-            
+
             <div className="border rounded-md p-4">
               <div className="text-sm text-muted-foreground mb-1">Resolution Rate</div>
               <div className="text-2xl font-bold">87%</div>
@@ -179,7 +169,7 @@ export default function AdminAnalytics() {
                 5% improvement
               </div>
             </div>
-            
+
             <div className="border rounded-md p-4">
               <div className="text-sm text-muted-foreground mb-1">Team Efficiency</div>
               <div className="text-2xl font-bold">92%</div>
@@ -188,7 +178,7 @@ export default function AdminAnalytics() {
                 8% improvement
               </div>
             </div>
-            
+
             <div className="border rounded-md p-4">
               <div className="text-sm text-muted-foreground mb-1">User Satisfaction</div>
               <div className="text-2xl font-bold">4.7/5</div>
@@ -201,5 +191,5 @@ export default function AdminAnalytics() {
         </CardContent>
       </Card>
     </AdminLayout>
-  );
+  )
 }

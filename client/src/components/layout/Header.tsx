@@ -1,180 +1,228 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
+"use client"
+import { useState } from "react"
+import { Link, useLocation } from "wouter"
+import { Button } from "@/components/ui/button"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
-import { Notification } from "@shared/schema";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useAuth } from "@/hooks/use-auth"
+import { cn } from "@/lib/utils"
+import { useQuery } from "@tanstack/react-query"
+import type { Notification } from "@shared/schema"
 
 export default function Header() {
-  const [location] = useLocation();
-  const { user, logoutMutation } = useAuth();
-  
+  const [location] = useLocation()
+  const { user, logout } = useAuth()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  const isActive = (path: string) => {
+    return location === path
+  }
+
   // Get user notifications if logged in
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ["/api/user/notifications"],
     enabled: !!user,
-  });
-  
+  })
+
   // Filter for unread notifications
-  const unreadNotifications = notifications.filter(n => !n.read);
-  
+  const unreadNotifications = notifications.filter((n) => !n.read)
+
   return (
-    <header className="bg-white shadow-sm z-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+    <header className="sticky top-0 z-40 w-full border-b bg-white">
+      <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center">
-          <Link href="/">
-            <a className="flex items-center">
-              <div className="h-10 w-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center mr-2">
-                <i className="ri-droplet-fill text-xl"></i>
-              </div>
-              <h1 className="text-xl font-heading font-semibold text-primary-700">SmartFlow</h1>
-            </a>
+          <Link href="/" className="flex items-center">
+            <i className="ri-droplet-fill text-2xl text-teal-600 mr-2"></i>
+            <span className="font-bold text-xl">SmartFlow</span>
           </Link>
+
+          <nav className="hidden md:flex items-center space-x-4 ml-10">
+            <Link
+              href="/map"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-teal-600",
+                isActive("/map") ? "text-teal-600" : "text-foreground",
+              )}
+            >
+              Map
+            </Link>
+            <Link
+              href="/my-reports"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-teal-600",
+                isActive("/my-reports") ? "text-teal-600" : "text-foreground",
+              )}
+            >
+              My Reports
+            </Link>
+            <Link
+              href="/ai-assistant"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-teal-600",
+                isActive("/ai-assistant") ? "text-teal-600" : "text-foreground",
+              )}
+            >
+              AI Assistant
+            </Link>
+            <Link
+              href="/learn"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-teal-600",
+                isActive("/learn") ? "text-teal-600" : "text-foreground",
+              )}
+            >
+              Learn
+            </Link>
+            {user && (
+              <Link
+                href="/achievements"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-teal-600",
+                  isActive("/achievements") ? "text-teal-600" : "text-foreground",
+                )}
+              >
+                Achievements
+              </Link>
+            )}
+          </nav>
         </div>
-        
-        {/* Desktop Navigation */}
-        <nav className="hidden md:block">
-          <ul className="flex space-x-8">
-            <li>
-              <Link href="/">
-                <a className={`${location === "/" ? "text-primary-700 font-medium" : "text-neutral-600 hover:text-primary-700"}`}>
-                  Home
-                </a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/map">
-                <a className={`${location === "/map" ? "text-primary-700 font-medium" : "text-neutral-600 hover:text-primary-700"}`}>
-                  Map
-                </a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/my-reports">
-                <a className={`${location === "/my-reports" ? "text-primary-700 font-medium" : "text-neutral-600 hover:text-primary-700"}`}>
-                  My Reports
-                </a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/learn">
-                <a className={`${location === "/learn" ? "text-primary-700 font-medium" : "text-neutral-600 hover:text-primary-700"}`}>
-                  Learn
-                </a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/achievements">
-                <a className={`${location === "/achievements" ? "text-primary-700 font-medium" : "text-neutral-600 hover:text-primary-700"}`}>
-                  Achievements
-                </a>
-              </Link>
-            </li>
-          </ul>
-        </nav>
-        
-        {/* User Menu */}
-        <div className="flex items-center">
+
+        <div className="flex items-center space-x-4">
           {user ? (
-            <>
-              <DropdownMenu>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="relative mr-4">
-                        <i className="ri-notification-3-line text-xl text-neutral-600"></i>
-                        {unreadNotifications.length > 0 && (
-                          <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center bg-primary-500 text-white rounded-full">
-                            {unreadNotifications.length}
-                          </Badge>
-                        )}
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Notifications</p>
-                  </TooltipContent>
-                </Tooltip>
-                <DropdownMenuContent align="end" className="w-80">
-                  {notifications.length === 0 ? (
-                    <div className="py-3 px-2 text-neutral-500 text-center">
-                      No notifications
-                    </div>
-                  ) : (
-                    <>
-                      {notifications.slice(0, 5).map((notification) => (
-                        <DropdownMenuItem key={notification.id} className={`py-2 px-3 ${!notification.read ? 'bg-primary-50' : ''}`}>
-                          <div className="flex flex-col">
-                            <div className="text-sm">{notification.content}</div>
-                            <div className="text-xs text-neutral-500 mt-1">
-                              {notification.createdAt ? new Date(notification.createdAt).toLocaleDateString() : 'Unknown date'} 
-                              {notification.createdAt ? ` at ${new Date(notification.createdAt).toLocaleTimeString()}` : ''}
-                            </div>
-                          </div>
-                        </DropdownMenuItem>
-                      ))}
-                      {notifications.length > 5 && (
-                        <DropdownMenuItem className="text-center text-primary-600 hover:text-primary-700">
-                          View all notifications
-                        </DropdownMenuItem>
-                      )}
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-primary-100 text-primary-700">
-                        {user.username.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem className="font-medium">
-                    {user.username}
-                  </DropdownMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="/placeholder.svg?height=32&width=32" alt={user.username} />
+                    <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.username}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Link href="/my-reports" className="w-full">
+                    My Reports
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link href="/achievements" className="w-full">
+                    Achievements
+                  </Link>
+                </DropdownMenuItem>
+                {user.isAdmin && (
                   <DropdownMenuItem>
-                    <Link href="/my-reports">
-                      <a className="w-full">My Reports</a>
+                    <Link href="/admin/dashboard" className="w-full">
+                      Admin Dashboard
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="/achievements">
-                      <a className="w-full">My Achievements</a>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => {
+                    logout()
+                  }}
+                >
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
-            <Button asChild size="sm">
-              <Link href="/auth">
-                <a>Sign In</a>
-              </Link>
-            </Button>
+            <Link href="/auth">
+              <Button variant="outline" size="sm">
+                Sign In
+              </Button>
+            </Link>
           )}
+
+          <Button className="hidden md:flex" asChild>
+            <Link href="/map?report=new">Report Leak</Link>
+          </Button>
+
+          <button
+            className="md:hidden text-gray-500"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            <i className={`ri-${isMenuOpen ? "close" : "menu"}-line text-2xl`}></i>
+          </button>
         </div>
       </div>
+
+      {isMenuOpen && (
+        <div className="md:hidden bg-white border-b">
+          <nav className="flex flex-col p-4 space-y-4">
+            <Link
+              href="/map"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-teal-600",
+                isActive("/map") ? "text-teal-600" : "text-foreground",
+              )}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Map
+            </Link>
+            <Link
+              href="/my-reports"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-teal-600",
+                isActive("/my-reports") ? "text-teal-600" : "text-foreground",
+              )}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              My Reports
+            </Link>
+            <Link
+              href="/ai-assistant"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-teal-600",
+                isActive("/ai-assistant") ? "text-teal-600" : "text-foreground",
+              )}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              AI Assistant
+            </Link>
+            <Link
+              href="/learn"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-teal-600",
+                isActive("/learn") ? "text-teal-600" : "text-foreground",
+              )}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Learn
+            </Link>
+            {user && (
+              <Link
+                href="/achievements"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-teal-600",
+                  isActive("/achievements") ? "text-teal-600" : "text-foreground",
+                )}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Achievements
+              </Link>
+            )}
+            <Link href="/map?report=new" onClick={() => setIsMenuOpen(false)}>
+              <Button className="w-full">Report Leak</Button>
+            </Link>
+          </nav>
+        </div>
+      )}
     </header>
-  );
+  )
 }

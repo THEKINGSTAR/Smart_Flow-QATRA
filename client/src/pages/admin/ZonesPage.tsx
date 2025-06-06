@@ -1,80 +1,97 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { 
-  PlusIcon, 
-  SearchIcon, 
-  MapPinIcon, 
+"use client"
+
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { AdminLayout } from "@/components/admin/AdminLayout"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import {
+  PlusIcon,
+  SearchIcon,
+  MapPinIcon,
   AlertCircleIcon,
-  BarChart4Icon, 
-  ArrowUpDown, 
-  EyeIcon, 
-  EditIcon, 
-  TrashIcon, 
-  ChevronRightIcon
-} from "lucide-react";
-import { Zone } from "@shared/schema";
+  BarChart4Icon,
+  ArrowUpDown,
+  EyeIcon,
+  EditIcon,
+  TrashIcon,
+  ChevronRightIcon,
+} from "lucide-react"
+import type { Zone } from "@shared/schema"
 
 // Extended Zone type to accommodate all the data we need
 interface EnhancedZone extends Zone {
-  status?: string;
-  reportCount?: number;
+  status?: string
+  reportCount?: number
 }
 
 export default function ZonesPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  
+  const [searchQuery, setSearchQuery] = useState("")
+
   // Fetch zones data
   const { data: zones, isLoading } = useQuery<EnhancedZone[]>({
     queryKey: ["/api/admin/zones"],
-  });
+  })
 
   // Filter zones based on search query
-  const filteredZones = zones?.filter((zone) => 
-    zone.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (zone.description || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredZones = zones?.filter(
+    (zone) =>
+      zone.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (zone.description || "").toLowerCase().includes(searchQuery.toLowerCase()),
+  )
 
   // Function to get priority badge
   const getPriorityBadge = (priority: number) => {
     if (priority >= 8) {
-      return <Badge variant="destructive">Critical</Badge>;
+      return <Badge variant="destructive">Critical</Badge>
     } else if (priority >= 6) {
-      return <Badge className="bg-orange-500">High</Badge>;
+      return <Badge className="bg-orange-500">High</Badge>
     } else if (priority >= 4) {
-      return <Badge className="bg-yellow-500">Medium</Badge>;
+      return <Badge className="bg-yellow-500">Medium</Badge>
     } else {
-      return <Badge variant="outline">Low</Badge>;
+      return <Badge variant="outline">Low</Badge>
     }
-  };
+  }
 
   // Function to get status badge
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge variant="outline" className="bg-green-50 text-green-700">Active</Badge>;
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700">
+            Active
+          </Badge>
+        )
       case "inactive":
-        return <Badge variant="outline" className="bg-gray-50 text-gray-700">Inactive</Badge>;
+        return (
+          <Badge variant="outline" className="bg-gray-50 text-gray-700">
+            Inactive
+          </Badge>
+        )
       case "maintenance":
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700">Maintenance</Badge>;
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700">
+            Maintenance
+          </Badge>
+        )
       default:
-        return <Badge variant="outline" className="bg-gray-50 text-gray-700">Unknown</Badge>;
+        return (
+          <Badge variant="outline" className="bg-gray-50 text-gray-700">
+            Unknown
+          </Badge>
+        )
     }
-  };
+  }
 
   return (
     <AdminLayout>
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Zone Management</h1>
-          <p className="text-muted-foreground">
-            Manage geographic areas and leak hotspots
-          </p>
+          <p className="text-muted-foreground">Manage geographic areas and leak hotspots</p>
         </div>
         <Button className="flex items-center">
           <PlusIcon className="mr-2 h-4 w-4" />
@@ -99,11 +116,11 @@ export default function ZonesPage() {
               <div className="bg-red-50 p-3 rounded-md">
                 <div className="text-sm text-red-600 font-medium">Critical Zones</div>
                 <div className="text-2xl font-bold">
-                  {zones?.filter(zone => (zone.priority || 0) >= 8).length || 0}
+                  {zones?.filter((zone) => (zone.priority || 0) >= 8).length || 0}
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-4 pt-4 border-t">
               <h3 className="text-sm font-medium mb-2">Zone Status Distribution</h3>
               <div className="h-8 bg-gray-100 rounded-md overflow-hidden flex">
@@ -147,7 +164,7 @@ export default function ZonesPage() {
                   <div className="text-xs text-red-700">12 active reports - Critical priority</div>
                 </div>
               </div>
-              
+
               <div className="flex items-start p-3 bg-orange-50 rounded-md">
                 <div className="mr-2 mt-0.5">
                   <AlertCircleIcon className="h-4 w-4 text-orange-600" />
@@ -157,7 +174,7 @@ export default function ZonesPage() {
                   <div className="text-xs text-orange-700">8 active reports - High priority</div>
                 </div>
               </div>
-              
+
               <div className="flex items-start p-3 bg-yellow-50 rounded-md">
                 <div className="mr-2 mt-0.5">
                   <AlertCircleIcon className="h-4 w-4 text-yellow-600" />
@@ -167,7 +184,7 @@ export default function ZonesPage() {
                   <div className="text-xs text-yellow-700">5 active reports - Medium priority</div>
                 </div>
               </div>
-              
+
               <div className="flex justify-center mt-2">
                 <Button variant="ghost" size="sm" className="text-xs text-teal-600 hover:text-teal-700">
                   View All Alerts
@@ -199,7 +216,7 @@ export default function ZonesPage() {
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div className="bg-red-500 h-full" style={{ width: "80%" }}></div>
                 </div>
-                
+
                 <div className="flex justify-between items-center text-xs">
                   <span>Residential North</span>
                   <span className="font-medium">8 reports</span>
@@ -207,7 +224,7 @@ export default function ZonesPage() {
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div className="bg-orange-500 h-full" style={{ width: "60%" }}></div>
                 </div>
-                
+
                 <div className="flex justify-between items-center text-xs">
                   <span>Industrial Zone</span>
                   <span className="font-medium">5 reports</span>
@@ -215,7 +232,7 @@ export default function ZonesPage() {
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div className="bg-yellow-500 h-full" style={{ width: "40%" }}></div>
                 </div>
-                
+
                 <div className="flex justify-between items-center text-xs">
                   <span>West Community</span>
                   <span className="font-medium">2 reports</span>
@@ -279,14 +296,10 @@ export default function ZonesPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-muted-foreground max-w-[300px] truncate">
-                          {zone.description || '-'}
+                          {zone.description || "-"}
                         </TableCell>
-                        <TableCell>
-                          {getStatusBadge(zone.status || 'active')}
-                        </TableCell>
-                        <TableCell>
-                          {getPriorityBadge(zone.priority || 0)}
-                        </TableCell>
+                        <TableCell>{getStatusBadge(zone.status || "active")}</TableCell>
+                        <TableCell>{getPriorityBadge(zone.priority || 0)}</TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-1">
                             <span className="font-medium">{zone.reportCount || 0}</span>
@@ -309,11 +322,7 @@ export default function ZonesPage() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={6} className="h-24 text-center">
-                        {filteredZones?.length === 0 ? (
-                          "No matching zones found"
-                        ) : (
-                          "No zones available"
-                        )}
+                        {filteredZones?.length === 0 ? "No matching zones found" : "No zones available"}
                       </TableCell>
                     </TableRow>
                   )}
@@ -324,5 +333,5 @@ export default function ZonesPage() {
         </CardContent>
       </Card>
     </AdminLayout>
-  );
+  )
 }

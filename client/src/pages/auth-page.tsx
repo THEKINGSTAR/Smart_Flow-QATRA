@@ -1,352 +1,258 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
-import { useAuth, loginSchema, registerSchema } from "@/hooks/use-auth";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { z } from "zod";
+"use client"
 
-export default function AuthPage() {
-  const [location, navigate] = useLocation();
-  const { user, loginMutation, registerMutation } = useAuth();
-  const [activeTab, setActiveTab] = useState<string>("login");
+import type React from "react"
+import { useState } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
+import type { z } from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useAuth, loginSchema, registerSchema } from "../hooks/use-auth"
+import { Button } from "../components/ui/button"
+import { Input } from "../components/ui/input"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../components/ui/form"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
+import { useToast } from "../hooks/use-toast"
+import { FaGoogle, FaApple, FaMicrosoft } from "react-icons/fa"
 
-  // Define login form
+const AuthPage: React.FC = () => {
+  const { login, register } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Get the return URL from location state or default to home
+  const from = location.state?.from?.pathname || "/"
+
+  // Login form
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
       password: "",
     },
-  });
+  })
 
-  // Define register form
+  // Register form
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
-      email: "",
       password: "",
       confirmPassword: "",
+      email: "",
     },
-  });
+  })
 
-  // Handle login submission
-  const onLoginSubmit = (data: z.infer<typeof loginSchema>) => {
-    loginMutation.mutate(data, {
-      onSuccess: () => {
-        navigate("/");
-      },
-    });
-  };
-
-  // Handle register submission
-  const onRegisterSubmit = (data: z.infer<typeof registerSchema>) => {
-    registerMutation.mutate(data, {
-      onSuccess: () => {
-        navigate("/");
-      },
-    });
-  };
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      navigate("/");
+  // Handle login form submission
+  const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
+    setIsLoading(true)
+    try {
+      await login(values.username, values.password)
+      navigate(from, { replace: true })
+    } catch (error) {
+      toast({
+        title: "Login Failed",
+        description: "Invalid username or password.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
     }
-  }, [user, navigate]);
+  }
+
+  // Handle register form submission
+  const onRegisterSubmit = async (values: z.infer<typeof registerSchema>) => {
+    setIsLoading(true)
+    try {
+      await register(values.username, values.password, values.email)
+      navigate(from, { replace: true })
+      toast({
+        title: "Registration Successful",
+        description: "Your account has been created.",
+      })
+    } catch (error) {
+      toast({
+        title: "Registration Failed",
+        description: "Username may already be taken.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Handle OAuth login
+  const handleOAuthLogin = (provider: string) => {
+    window.location.href = `/auth/${provider}`
+  }
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="h-12 w-12 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center">
-            <i className="ri-droplet-fill text-2xl"></i>
-          </div>
-        </div>
-        <h2 className="mt-3 text-center text-3xl font-extrabold font-heading text-gray-900">
-          SmartFlow
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Join our community to help report and reduce water leakage
-        </p>
-      </div>
+    <div className="container mx-auto flex items-center justify-center min-h-screen px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">SmartFlow-QATRA</CardTitle>
+          <CardDescription className="text-center">Login or create an account to report water leaks</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
+            </TabsList>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-5xl">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Auth Forms */}
-            <div>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="mb-4 grid grid-cols-2">
-                  <TabsTrigger value="login">Login</TabsTrigger>
-                  <TabsTrigger value="register">Register</TabsTrigger>
-                </TabsList>
+            {/* Login Tab */}
+            <TabsContent value="login">
+              <Form {...loginForm}>
+                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                  <FormField
+                    control={loginForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter your username" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={loginForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="Enter your password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Logging in..." : "Login"}
+                  </Button>
+                </form>
+              </Form>
+            </TabsContent>
 
-                <TabsContent value="login">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl font-medium font-heading">Login to your account</CardTitle>
-                      <CardDescription>
-                        Enter your credentials to access your account
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Form {...loginForm}>
-                        <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                          <FormField
-                            control={loginForm.control}
-                            name="username"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Username</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="yourusername" 
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+            {/* Register Tab */}
+            <TabsContent value="register">
+              <Form {...registerForm}>
+                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                  <FormField
+                    control={registerForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Choose a username" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={registerForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="Enter your email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={registerForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="Create a password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={registerForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="Confirm your password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Creating Account..." : "Create Account"}
+                  </Button>
+                </form>
+              </Form>
+            </TabsContent>
+          </Tabs>
 
-                          <FormField
-                            control={loginForm.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Password</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="password" 
-                                    placeholder="••••••••" 
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <Button 
-                            type="submit" 
-                            className="w-full" 
-                            disabled={loginMutation.isPending}
-                          >
-                            {loginMutation.isPending ? (
-                              <span className="flex items-center">
-                                <i className="ri-loader-4-line animate-spin mr-2"></i>
-                                Logging in...
-                              </span>
-                            ) : (
-                              "Login"
-                            )}
-                          </Button>
-                        </form>
-                      </Form>
-                    </CardContent>
-                    <CardFooter className="flex justify-center">
-                      <Button 
-                        variant="link" 
-                        onClick={() => setActiveTab("register")}
-                      >
-                        Don't have an account? Register
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="register">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl font-medium font-heading">Create an account</CardTitle>
-                      <CardDescription>
-                        Join SmartFlow to track your reports and earn rewards
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Form {...registerForm}>
-                        <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                          <FormField
-                            control={registerForm.control}
-                            name="username"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Username</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Choose a username" 
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={registerForm.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Email</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="email" 
-                                    placeholder="your@email.com" 
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={registerForm.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Password</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="password" 
-                                    placeholder="••••••••" 
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={registerForm.control}
-                            name="confirmPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Confirm Password</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="password" 
-                                    placeholder="••••••••" 
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <Button 
-                            type="submit" 
-                            className="w-full" 
-                            disabled={registerMutation.isPending}
-                          >
-                            {registerMutation.isPending ? (
-                              <span className="flex items-center">
-                                <i className="ri-loader-4-line animate-spin mr-2"></i>
-                                Creating account...
-                              </span>
-                            ) : (
-                              "Register"
-                            )}
-                          </Button>
-                        </form>
-                      </Form>
-                    </CardContent>
-                    <CardFooter className="flex justify-center">
-                      <Button 
-                        variant="link" 
-                        onClick={() => setActiveTab("login")}
-                      >
-                        Already have an account? Login
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
-
-            {/* Hero Section */}
-            <div className="hidden md:block bg-primary-50 rounded-lg p-8">
-              <div className="flex justify-center mb-6">
-                <div className="h-16 w-16 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center">
-                  <i className="ri-water-flash-line text-3xl"></i>
-                </div>
+          {/* OAuth Login Options */}
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
               </div>
-              <h3 className="text-2xl font-bold font-heading text-primary-800 text-center mb-4">
-                Join the Water Conservation Movement
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <i className="ri-map-pin-line text-xl text-primary-600"></i>
-                  </div>
-                  <div className="ml-3">
-                    <h4 className="text-sm font-medium text-primary-900">Report Leaks with Precision</h4>
-                    <p className="mt-1 text-sm text-primary-700">
-                      Use geolocation to accurately report water leaks anywhere in your community.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <i className="ri-wifi-off-line text-xl text-primary-600"></i>
-                  </div>
-                  <div className="ml-3">
-                    <h4 className="text-sm font-medium text-primary-900">Works Offline</h4>
-                    <p className="mt-1 text-sm text-primary-700">
-                      Submit reports even without an internet connection. We'll sync when you're back online.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <i className="ri-medal-line text-xl text-primary-600"></i>
-                  </div>
-                  <div className="ml-3">
-                    <h4 className="text-sm font-medium text-primary-900">Earn Achievements</h4>
-                    <p className="mt-1 text-sm text-primary-700">
-                      Get recognized for your contributions with badges and points as you help save water.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <i className="ri-notification-3-line text-xl text-primary-600"></i>
-                  </div>
-                  <div className="ml-3">
-                    <h4 className="text-sm font-medium text-primary-900">Stay Updated</h4>
-                    <p className="mt-1 text-sm text-primary-700">
-                      Receive notifications when your reported leaks are addressed by authorities.
-                    </p>
-                  </div>
-                </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
               </div>
             </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => handleOAuthLogin("google")}
+                className="flex items-center justify-center"
+              >
+                <FaGoogle className="mr-2" />
+                Google
+              </Button>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => handleOAuthLogin("apple")}
+                className="flex items-center justify-center"
+              >
+                <FaApple className="mr-2" />
+                Apple
+              </Button>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => handleOAuthLogin("microsoft")}
+                className="flex items-center justify-center"
+              >
+                <FaMicrosoft className="mr-2" />
+                Microsoft
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-2">
+          <p className="text-xs text-center text-muted-foreground">
+            By continuing, you agree to our Terms of Service and Privacy Policy.
+          </p>
+        </CardFooter>
+      </Card>
     </div>
-  );
+  )
 }
+
+export default AuthPage

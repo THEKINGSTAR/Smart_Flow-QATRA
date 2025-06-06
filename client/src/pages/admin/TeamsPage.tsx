@@ -1,44 +1,37 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { 
-  PlusIcon, 
-  SearchIcon, 
-  UsersIcon, 
-  PhoneIcon, 
-  ClipboardListIcon,
-  EditIcon, 
-  TrashIcon 
-} from "lucide-react";
-import { Team } from "@shared/schema";
+"use client"
+
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { AdminLayout } from "@/components/admin/AdminLayout"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { PlusIcon, SearchIcon, UsersIcon, PhoneIcon, ClipboardListIcon, EditIcon, TrashIcon } from "lucide-react"
+import type { Team } from "@shared/schema"
 
 export default function TeamsPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  
+  const [searchQuery, setSearchQuery] = useState("")
+
   // Fetch teams data
   const { data: teams, isLoading } = useQuery<Team[]>({
     queryKey: ["/api/admin/teams"],
-  });
+  })
 
   // Filter teams based on search query
-  const filteredTeams = teams?.filter((team) => 
-    team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (team.description || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTeams = teams?.filter(
+    (team) =>
+      team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (team.description || "").toLowerCase().includes(searchQuery.toLowerCase()),
+  )
 
   return (
     <AdminLayout>
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Team Management</h1>
-          <p className="text-muted-foreground">
-            Manage inspection and repair teams
-          </p>
+          <p className="text-muted-foreground">Manage inspection and repair teams</p>
         </div>
         <Button className="flex items-center">
           <PlusIcon className="mr-2 h-4 w-4" />
@@ -67,7 +60,7 @@ export default function TeamsPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-4 pt-4 border-t">
               <h3 className="text-sm font-medium mb-2">Staff Distribution</h3>
               <div className="h-8 bg-gray-100 rounded-md overflow-hidden flex">
@@ -188,12 +181,10 @@ export default function TeamsPage() {
                       <TableRow key={team.id}>
                         <TableCell className="font-medium">
                           <div>{team.name}</div>
-                          {team.description && (
-                            <div className="text-xs text-muted-foreground">{team.description}</div>
-                          )}
+                          {team.description && <div className="text-xs text-muted-foreground">{team.description}</div>}
                         </TableCell>
                         <TableCell>{team.memberCount || 0}</TableCell>
-                        <TableCell>{team.contact || '-'}</TableCell>
+                        <TableCell>{team.contact || "-"}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="bg-green-50 text-green-700">
                             Available
@@ -213,11 +204,7 @@ export default function TeamsPage() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={6} className="h-24 text-center">
-                        {filteredTeams?.length === 0 ? (
-                          "No matching teams found"
-                        ) : (
-                          "No teams available"
-                        )}
+                        {filteredTeams?.length === 0 ? "No matching teams found" : "No teams available"}
                       </TableCell>
                     </TableRow>
                   )}
@@ -228,5 +215,5 @@ export default function TeamsPage() {
         </CardContent>
       </Card>
     </AdminLayout>
-  );
+  )
 }

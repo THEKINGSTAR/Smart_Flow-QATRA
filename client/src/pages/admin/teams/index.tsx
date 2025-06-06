@@ -1,83 +1,99 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { 
+"use client"
+
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { AdminLayout } from "@/components/admin/AdminLayout"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import {
   UsersIcon,
-  SearchIcon, 
+  SearchIcon,
   PlusIcon,
   UserIcon,
   PhoneIcon,
   MailIcon,
   MapPinIcon,
-  EyeIcon, 
-  EditIcon, 
+  EyeIcon,
+  EditIcon,
   TrashIcon,
   CheckCircleIcon,
-  ClockIcon
-} from "lucide-react";
-import { Team } from "@shared/schema";
+  ClockIcon,
+} from "lucide-react"
+import type { Team } from "@shared/schema"
 
 // Enhanced Team type to accommodate all the data we need
 interface EnhancedTeam extends Team {
-  status?: string;
-  leader?: string;
-  phone?: string;
-  email?: string;
-  specialty?: string;
-  location?: string;
+  status?: string
+  leader?: string
+  phone?: string
+  email?: string
+  specialty?: string
+  location?: string
 }
 
 export default function AdminTeams() {
-  const [searchQuery, setSearchQuery] = useState("");
-  
+  const [searchQuery, setSearchQuery] = useState("")
+
   // Fetch teams data
   const { data: rawTeams, isLoading } = useQuery<Team[]>({
     queryKey: ["/api/admin/teams"],
-  });
-  
+  })
+
   // Process teams to add the additional properties
-  const teams = rawTeams?.map(team => ({
-    ...team,
-    // Default values for the extended properties
-    status: "available",
-    leader: team.contact?.split(',')[0] || "Team Lead",
-    phone: "555-" + Math.floor(1000 + Math.random() * 9000),
-    email: `team${team.id}@smartflow.com`,
-    specialty: "Water Maintenance",
-    location: "District " + team.id
-  } as EnhancedTeam));
+  const teams = rawTeams?.map(
+    (team) =>
+      ({
+        ...team,
+        // Default values for the extended properties
+        status: "available",
+        leader: team.contact?.split(",")[0] || "Team Lead",
+        phone: "555-" + Math.floor(1000 + Math.random() * 9000),
+        email: `team${team.id}@smartflow.com`,
+        specialty: "Water Maintenance",
+        location: "District " + team.id,
+      }) as EnhancedTeam,
+  )
 
   // Filter teams based on search query
-  const filteredTeams = teams?.filter((team) => 
-    team.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (team.description || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTeams = teams?.filter(
+    (team) =>
+      team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (team.description || "").toLowerCase().includes(searchQuery.toLowerCase()),
+  )
 
   // Function to get availability badge
   const getAvailabilityBadge = (status: string) => {
     switch (status) {
       case "available":
-        return <Badge variant="outline" className="bg-green-50 text-green-700">Available</Badge>;
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700">
+            Available
+          </Badge>
+        )
       case "on-duty":
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700">On Duty</Badge>;
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700">
+            On Duty
+          </Badge>
+        )
       default:
-        return <Badge variant="outline" className="bg-gray-50 text-gray-700">Unavailable</Badge>;
+        return (
+          <Badge variant="outline" className="bg-gray-50 text-gray-700">
+            Unavailable
+          </Badge>
+        )
     }
-  };
+  }
 
   return (
     <AdminLayout>
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Field Teams</h1>
-          <p className="text-muted-foreground">
-            Manage your maintenance and repair teams
-          </p>
+          <p className="text-muted-foreground">Manage your maintenance and repair teams</p>
         </div>
         <Button className="flex items-center">
           <PlusIcon className="mr-2 h-4 w-4" />
@@ -97,7 +113,7 @@ export default function AdminTeams() {
             <div className="text-2xl font-bold">{teams?.length || 0}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center text-green-600">
@@ -106,12 +122,10 @@ export default function AdminTeams() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {teams?.filter(team => team.status === "available").length || 0}
-            </div>
+            <div className="text-2xl font-bold">{teams?.filter((team) => team.status === "available").length || 0}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center text-blue-600">
@@ -120,9 +134,7 @@ export default function AdminTeams() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {teams?.filter(team => team.status === "on-duty").length || 0}
-            </div>
+            <div className="text-2xl font-bold">{teams?.filter((team) => team.status === "on-duty").length || 0}</div>
           </CardContent>
         </Card>
       </div>
@@ -130,9 +142,7 @@ export default function AdminTeams() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Team Assignments</CardTitle>
-          <CardDescription>
-            Overview of current team assignments and workload
-          </CardDescription>
+          <CardDescription>Overview of current team assignments and workload</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -143,7 +153,9 @@ export default function AdminTeams() {
                     <UsersIcon className="h-5 w-5 mr-2 text-indigo-600" />
                     <span className="font-medium">Team Alpha</span>
                   </div>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700">On Duty</Badge>
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                    On Duty
+                  </Badge>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
@@ -160,14 +172,16 @@ export default function AdminTeams() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="border rounded-md p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
                     <UsersIcon className="h-5 w-5 mr-2 text-indigo-600" />
                     <span className="font-medium">Team Bravo</span>
                   </div>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700">On Duty</Badge>
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                    On Duty
+                  </Badge>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
@@ -184,14 +198,16 @@ export default function AdminTeams() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="border rounded-md p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
                     <UsersIcon className="h-5 w-5 mr-2 text-indigo-600" />
                     <span className="font-medium">Team Charlie</span>
                   </div>
-                  <Badge variant="outline" className="bg-green-50 text-green-700">Available</Badge>
+                  <Badge variant="outline" className="bg-green-50 text-green-700">
+                    Available
+                  </Badge>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
@@ -209,7 +225,7 @@ export default function AdminTeams() {
                 </div>
               </div>
             </div>
-            
+
             <div className="text-center">
               <Button variant="outline" size="sm" className="mt-2">
                 View All Assignments
@@ -285,9 +301,7 @@ export default function AdminTeams() {
                           </div>
                         </TableCell>
                         <TableCell>{team.specialty || "-"}</TableCell>
-                        <TableCell>
-                          {getAvailabilityBadge(team.status || "available")}
-                        </TableCell>
+                        <TableCell>{getAvailabilityBadge(team.status || "available")}</TableCell>
                         <TableCell>
                           <div className="flex items-center text-muted-foreground">
                             <MapPinIcon className="h-3.5 w-3.5 mr-1" />
@@ -310,11 +324,7 @@ export default function AdminTeams() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={7} className="h-24 text-center">
-                        {filteredTeams?.length === 0 ? (
-                          "No matching teams found"
-                        ) : (
-                          "No teams available"
-                        )}
+                        {filteredTeams?.length === 0 ? "No matching teams found" : "No teams available"}
                       </TableCell>
                     </TableRow>
                   )}
@@ -325,5 +335,5 @@ export default function AdminTeams() {
         </CardContent>
       </Card>
     </AdminLayout>
-  );
+  )
 }

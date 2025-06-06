@@ -1,15 +1,17 @@
-import { useState } from 'react';
-import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+"use client"
+
+import { useState } from "react"
+import { Outlet, NavLink, useNavigate, Link } from "react-router-dom"
+import { useAuth } from "../hooks/useAuth"
 
 const DashboardLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout, hasRole } = useAuth();
-  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { user, logout, hasRole } = useAuth()
+  const navigate = useNavigate()
 
   const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+    setSidebarOpen(!sidebarOpen)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -30,12 +32,7 @@ const DashboardLayout = () => {
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </button>
                 <Link to="/dashboard" className="flex items-center">
@@ -52,7 +49,7 @@ const DashboardLayout = () => {
                   </span>
                   <div className="relative">
                     <button
-                      onClick={() => navigate('/profile')}
+                      onClick={() => navigate("/profile")}
                       className="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     >
                       <div className="h-8 w-8 rounded-full bg-primary-600 text-white flex items-center justify-center">
@@ -77,7 +74,7 @@ const DashboardLayout = () => {
         {/* Sidebar */}
         <aside
           className={`bg-white w-64 shadow-md transform ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
           } lg:translate-x-0 transition-transform duration-300 lg:static fixed top-16 bottom-0 left-0 z-10 overflow-y-auto`}
         >
           <div className="py-4">
@@ -86,9 +83,7 @@ const DashboardLayout = () => {
                 to="/dashboard"
                 className={({ isActive }) =>
                   `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    isActive
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                    isActive ? "bg-primary-100 text-primary-700" : "text-gray-700 hover:bg-gray-100"
                   }`
                 }
               >
@@ -113,9 +108,7 @@ const DashboardLayout = () => {
                 to="/zone-map"
                 className={({ isActive }) =>
                   `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    isActive
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                    isActive ? "bg-primary-100 text-primary-700" : "text-gray-700 hover:bg-gray-100"
                   }`
                 }
               >
@@ -136,15 +129,13 @@ const DashboardLayout = () => {
                 Zone Map
               </NavLink>
 
-              {hasRole(['admin', 'planner']) && (
+              {hasRole(["admin", "planner"]) && (
                 <>
                   <NavLink
                     to="/resource-allocation"
                     className={({ isActive }) =>
                       `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                        isActive
-                          ? 'bg-primary-100 text-primary-700'
-                          : 'text-gray-700 hover:bg-gray-100'
+                        isActive ? "bg-primary-100 text-primary-700" : "text-gray-700 hover:bg-gray-100"
                       }`
                     }
                   >
@@ -169,9 +160,7 @@ const DashboardLayout = () => {
                     to="/high-priority"
                     className={({ isActive }) =>
                       `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                        isActive
-                          ? 'bg-primary-100 text-primary-700'
-                          : 'text-gray-700 hover:bg-gray-100'
+                        isActive ? "bg-primary-100 text-primary-700" : "text-gray-700 hover:bg-gray-100"
                       }`
                     }
                   >
@@ -194,14 +183,12 @@ const DashboardLayout = () => {
                 </>
               )}
 
-              {hasRole(['admin', 'analyst']) && (
+              {hasRole(["admin", "analyst"]) && (
                 <NavLink
                   to="/insights"
                   className={({ isActive }) =>
                     `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                      isActive
-                        ? 'bg-primary-100 text-primary-700'
-                        : 'text-gray-700 hover:bg-gray-100'
+                      isActive ? "bg-primary-100 text-primary-700" : "text-gray-700 hover:bg-gray-100"
                     }`
                   }
                 >
@@ -227,9 +214,7 @@ const DashboardLayout = () => {
                 to="/profile"
                 className={({ isActive }) =>
                   `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    isActive
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                    isActive ? "bg-primary-100 text-primary-700" : "text-gray-700 hover:bg-gray-100"
                   }`
                 }
               >
@@ -263,13 +248,10 @@ const DashboardLayout = () => {
 
       {/* Backdrop for mobile */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-0 bg-gray-600 bg-opacity-75 lg:hidden"
-          onClick={toggleSidebar}
-        ></div>
+        <div className="fixed inset-0 z-0 bg-gray-600 bg-opacity-75 lg:hidden" onClick={toggleSidebar}></div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default DashboardLayout;
+export default DashboardLayout

@@ -1,139 +1,193 @@
-import { createContext, ReactNode, useContext } from "react";
-import {
-  useQuery,
-  useMutation,
-  UseMutationResult,
-} from "@tanstack/react-query";
-import { insertUserSchema, User } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
+"use client"
 
-type AuthContextType = {
-  user: Omit<User, "password"> | null;
-  isLoading: boolean;
-  error: Error | null;
-  loginMutation: UseMutationResult<Omit<User, "password">, Error, LoginData>;
-  logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<Omit<User, "password">, Error, RegisterData>;
-};
+import type React from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { z } from "zod"
+import { apiRequest } from "../lib/queryClient"
 
-const loginSchema = z.object({
+// Define schemas for login and registration
+export const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-});
+})
 
-const registerSchema = insertUserSchema.extend({
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+export const registerSchema = z
+  .object({
+    username: z.string().min(3, "Username must be at least 3 characters"),
+    email: z.string().email("Please enter a valid email"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
 
-type LoginData = z.infer<typeof loginSchema>;
-type RegisterData = z.infer<typeof registerSchema>;
+// Define user type
+export interface User {
+  id: number
+  username: string
+  email?: string
+  points: number
+  oauthProvider?: string
+}
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+// Define auth context type
+interface AuthContextType {
+  user: User | null
+  isLoading: boolean
+  isAuthenticated: boolean
+  isAdmin: boolean
+  adminRole: string | null
+  login: (username: string, password: string) => Promise<void>
+  register: (username: string, password: string, email: string) => Promise<void>
+  logout: () => Promise<void>
+  checkAdminStatus: () => Promise<void>
+}
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const { toast } = useToast();
-  const {
-    data: user,
-    error,
-    isLoading,
-  } = useQuery<Omit<User, "password"> | undefined, Error>({
-    queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-  });
+// Create auth context
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
-    },
-    onSuccess: (user: Omit<User, "password">) => {
-      queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${user.username}!`,
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Login failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+// Auth provider props
+interface AuthProviderProps {
+  children: ReactNode
+}
 
-  const registerMutation = useMutation({
-    mutationFn: async (credentials: RegisterData) => {
-      // Remove confirmPassword before sending to API
-      const { confirmPassword, ...registerData } = credentials;
-      const res = await apiRequest("POST", "/api/register", registerData);
-      return await res.json();
-    },
-    onSuccess: (user: Omit<User, "password">) => {
-      queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Registration successful",
-        description: `Welcome to SmartFlow, ${user.username}!`,
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Registration failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+// Auth provider component
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [adminRole, setAdminRole] = useState<string | null>(null)
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
-    },
-    onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  // Check if user is authenticated on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await apiRequest("/auth/user", {
+          method: "GET",
+          credentials: "include",
+        })
+
+        if (response.user) {
+          setUser(response.user)
+          checkAdminStatus()
+        }
+      } catch (error) {
+        console.error("Auth check error:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [])
+
+  // Login function
+  const login = async (username: string, password: string) => {
+    setIsLoading(true)
+    try {
+      const response = await apiRequest("/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+        credentials: "include",
+      })
+
+      setUser(response.user)
+      await checkAdminStatus()
+    } catch (error) {
+      console.error("Login error:", error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Register function
+  const register = async (username: string, password: string, email: string) => {
+    setIsLoading(true)
+    try {
+      const response = await apiRequest("/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password, email }),
+        credentials: "include",
+      })
+
+      setUser(response.user)
+    } catch (error) {
+      console.error("Registration error:", error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Logout function
+  const logout = async () => {
+    setIsLoading(true)
+    try {
+      await apiRequest("/auth/logout", {
+        method: "GET",
+        credentials: "include",
+      })
+
+      setUser(null)
+      setIsAdmin(false)
+      setAdminRole(null)
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Check if user is admin
+  const checkAdminStatus = async () => {
+    try {
+      const response = await apiRequest("/auth/admin", {
+        method: "GET",
+        credentials: "include",
+      })
+
+      setIsAdmin(response.isAdmin)
+      setAdminRole(response.role || null)
+    } catch (error) {
+      console.error("Admin check error:", error)
+      setIsAdmin(false)
+      setAdminRole(null)
+    }
+  }
 
   return (
     <AuthContext.Provider
       value={{
-        user: user ?? null,
+        user,
         isLoading,
-        error,
-        loginMutation,
-        logoutMutation,
-        registerMutation,
+        isAuthenticated: !!user,
+        isAdmin,
+        adminRole,
+        login,
+        register,
+        logout,
+        checkAdminStatus,
       }}
     >
       {children}
     </AuthContext.Provider>
-  );
+  )
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+// Hook to use auth context
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider")
   }
-  return context;
+  return context
 }
-
-export { loginSchema, registerSchema };

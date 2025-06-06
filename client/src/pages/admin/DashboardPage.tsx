@@ -1,58 +1,55 @@
-import { useState } from "react";
-import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  MapPinIcon, 
-  AlertCircleIcon, 
-  DropletIcon, 
-  UsersIcon, 
+import type React from "react"
+import { Link } from "wouter"
+import { useQuery } from "@tanstack/react-query"
+import { AdminLayout } from "@/components/admin/AdminLayout"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+import {
+  MapPinIcon,
+  AlertCircleIcon,
+  DropletIcon,
+  UsersIcon,
   CheckCircleIcon,
-  ClockIcon, 
+  ClockIcon,
   TrendingUpIcon,
   WrenchIcon,
   ActivityIcon,
   ShieldIcon,
   FolderIcon,
-  ChevronRightIcon
-} from "lucide-react";
+  ChevronRightIcon,
+} from "lucide-react"
 
 export function DashboardPage() {
   // Define the dashboard stats type
   interface DashboardStats {
-    totalReports: number;
-    pendingReports: number;
-    resolvedReports: number;
-    criticalReports: number;
+    totalReports: number
+    pendingReports: number
+    resolvedReports: number
+    criticalReports: number
   }
-  
+
   // Fetch data from API
   const { data: dashboardStats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/admin/dashboard"],
-  });
-  
+  })
+
   // Default stats when data is not available
   const stats = dashboardStats || {
     totalReports: 0,
     pendingReports: 0,
     resolvedReports: 0,
-    criticalReports: 0
-  };
+    criticalReports: 0,
+  }
 
   return (
     <AdminLayout>
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">SmartFlow Dashboard</h1>
-          <p className="text-muted-foreground">
-            Water leak management system overview
-          </p>
+          <p className="text-muted-foreground">Water leak management system overview</p>
         </div>
-        
+
         <div className="space-x-2">
           <Button variant="outline" className="bg-white">
             <ActivityIcon className="h-4 w-4 mr-2" />
@@ -77,7 +74,7 @@ export function DashboardPage() {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-amber-500 flex items-center">
@@ -92,7 +89,7 @@ export function DashboardPage() {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-green-500 flex items-center">
@@ -107,7 +104,7 @@ export function DashboardPage() {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-red-500 flex items-center">
@@ -142,7 +139,9 @@ export function DashboardPage() {
                     <p className="text-sm text-red-700">Downtown District, 123 Main Street</p>
                   </div>
                   <Link href="/admin/reports/1">
-                    <Button variant="destructive" size="sm">View Report</Button>
+                    <Button variant="destructive" size="sm">
+                      View Report
+                    </Button>
                   </Link>
                 </div>
                 <div className="space-y-2">
@@ -150,10 +149,10 @@ export function DashboardPage() {
                     <span className="text-gray-500">Response Priority</span>
                     <span className="font-medium text-red-700">Critical - 1 hour</span>
                   </div>
-                  <Progress 
-                    value={85} 
-                    className="h-2 bg-red-100" 
-                    style={{ "--tw-progress-fill": "rgb(220 38 38)" } as React.CSSProperties} 
+                  <Progress
+                    value={85}
+                    className="h-2 bg-red-100"
+                    style={{ "--tw-progress-fill": "rgb(220 38 38)" } as React.CSSProperties}
                   />
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-gray-500">Reported: 43 minutes ago</span>
@@ -161,7 +160,7 @@ export function DashboardPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-orange-50 border border-orange-100 rounded-md p-4">
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -172,7 +171,9 @@ export function DashboardPage() {
                     <p className="text-sm text-orange-700">East Side, 456 Oak Avenue</p>
                   </div>
                   <Link href="/admin/reports/2">
-                    <Button className="bg-orange-600 hover:bg-orange-700" size="sm">View Report</Button>
+                    <Button className="bg-orange-600 hover:bg-orange-700" size="sm">
+                      View Report
+                    </Button>
                   </Link>
                 </div>
                 <div className="space-y-2">
@@ -180,10 +181,10 @@ export function DashboardPage() {
                     <span className="text-gray-500">Response Priority</span>
                     <span className="font-medium text-orange-700">High - 4 hours</span>
                   </div>
-                  <Progress 
-                    value={65} 
-                    className="h-2 bg-orange-100" 
-                    style={{ "--tw-progress-fill": "rgb(234 88 12)" } as React.CSSProperties} 
+                  <Progress
+                    value={65}
+                    className="h-2 bg-orange-100"
+                    style={{ "--tw-progress-fill": "rgb(234 88 12)" } as React.CSSProperties}
                   />
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-gray-500">Reported: 1 hour ago</span>
@@ -191,8 +192,11 @@ export function DashboardPage() {
                   </div>
                 </div>
               </div>
-              
-              <Link href="/admin/reports" className="flex items-center justify-center text-sm text-teal-600 hover:text-teal-700 font-medium">
+
+              <Link
+                href="/admin/reports"
+                className="flex items-center justify-center text-sm text-teal-600 hover:text-teal-700 font-medium"
+              >
                 View All Reports
                 <ChevronRightIcon className="h-4 w-4 ml-1" />
               </Link>
@@ -218,7 +222,7 @@ export function DashboardPage() {
                 <div className="text-xs text-gray-500 mb-1.5">Workload: 65%</div>
                 <Progress value={65} className="h-2" />
               </div>
-              
+
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <div className="flex items-center">
@@ -230,7 +234,7 @@ export function DashboardPage() {
                 <div className="text-xs text-gray-500 mb-1.5">Workload: 85%</div>
                 <Progress value={85} className="h-2" />
               </div>
-              
+
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <div className="flex items-center">
@@ -242,7 +246,7 @@ export function DashboardPage() {
                 <div className="text-xs text-gray-500 mb-1.5">Workload: 90%</div>
                 <Progress value={90} className="h-2" />
               </div>
-              
+
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <div className="flex items-center">
@@ -254,8 +258,11 @@ export function DashboardPage() {
                 <div className="text-xs text-gray-500 mb-1.5">Workload: 30%</div>
                 <Progress value={30} className="h-2" />
               </div>
-              
-              <Link href="/admin/teams" className="flex items-center justify-center text-sm text-teal-600 hover:text-teal-700 font-medium mt-2">
+
+              <Link
+                href="/admin/teams"
+                className="flex items-center justify-center text-sm text-teal-600 hover:text-teal-700 font-medium mt-2"
+              >
                 Manage Teams
                 <ChevronRightIcon className="h-4 w-4 ml-1" />
               </Link>
@@ -286,7 +293,7 @@ export function DashboardPage() {
                 </div>
                 <Progress value={45} className="h-2" />
               </div>
-              
+
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-sm font-medium">Residential North</span>
@@ -298,7 +305,7 @@ export function DashboardPage() {
                 </div>
                 <Progress value={30} className="h-2" />
               </div>
-              
+
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-sm font-medium">Industrial Zone</span>
@@ -310,7 +317,7 @@ export function DashboardPage() {
                 </div>
                 <Progress value={15} className="h-2" />
               </div>
-              
+
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-sm font-medium">West Community</span>
@@ -322,8 +329,11 @@ export function DashboardPage() {
                 </div>
                 <Progress value={10} className="h-2" />
               </div>
-              
-              <Link href="/admin/zones" className="flex items-center justify-center text-sm text-teal-600 hover:text-teal-700 font-medium mt-2">
+
+              <Link
+                href="/admin/zones"
+                className="flex items-center justify-center text-sm text-teal-600 hover:text-teal-700 font-medium mt-2"
+              >
                 Manage Zones
                 <ChevronRightIcon className="h-4 w-4 ml-1" />
               </Link>
@@ -348,7 +358,7 @@ export function DashboardPage() {
                 </div>
                 <div className="text-xs text-gray-500">-12% from last month</div>
               </div>
-              
+
               <div className="p-3 bg-gray-50 rounded-md">
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium">Resolution Rate</span>
@@ -356,7 +366,7 @@ export function DashboardPage() {
                 </div>
                 <div className="text-xs text-gray-500">+4% from last month</div>
               </div>
-              
+
               <div className="p-3 bg-gray-50 rounded-md">
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium">Resource Utilization</span>
@@ -364,7 +374,7 @@ export function DashboardPage() {
                 </div>
                 <div className="text-xs text-gray-500">High efficiency detected</div>
               </div>
-              
+
               <div className="p-3 bg-gray-50 rounded-md">
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium">Water Savings</span>
@@ -372,8 +382,11 @@ export function DashboardPage() {
                 </div>
                 <div className="text-xs text-gray-500">Estimated from fixed leaks</div>
               </div>
-              
-              <Link href="/admin/analytics" className="flex items-center justify-center text-sm text-teal-600 hover:text-teal-700 font-medium mt-2">
+
+              <Link
+                href="/admin/analytics"
+                className="flex items-center justify-center text-sm text-teal-600 hover:text-teal-700 font-medium mt-2"
+              >
                 View Analytics
                 <ChevronRightIcon className="h-4 w-4 ml-1" />
               </Link>
@@ -396,28 +409,28 @@ export function DashboardPage() {
                 <div className="text-sm text-purple-600">Gallons Saved</div>
                 <div className="text-xs text-gray-500 mt-1">Estimated from leak repairs</div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-blue-50 rounded-md p-3 text-center">
                   <div className="text-xl font-bold text-blue-700">$4,230</div>
                   <div className="text-xs text-blue-600">Cost Savings</div>
                 </div>
-                
+
                 <div className="bg-teal-50 rounded-md p-3 text-center">
                   <div className="text-xl font-bold text-teal-700">43</div>
                   <div className="text-xs text-teal-600">Leaks Fixed</div>
                 </div>
               </div>
-              
+
               <div className="border border-gray-200 rounded-md p-3">
                 <div className="text-sm font-medium mb-2">Monthly Trend</div>
                 <div className="h-16 flex items-end justify-between space-x-1">
-                  <div className="w-1/6 bg-teal-100 rounded-t" style={{ height: '30%' }}></div>
-                  <div className="w-1/6 bg-teal-200 rounded-t" style={{ height: '50%' }}></div>
-                  <div className="w-1/6 bg-teal-300 rounded-t" style={{ height: '40%' }}></div>
-                  <div className="w-1/6 bg-teal-400 rounded-t" style={{ height: '70%' }}></div>
-                  <div className="w-1/6 bg-teal-500 rounded-t" style={{ height: '60%' }}></div>
-                  <div className="w-1/6 bg-teal-600 rounded-t" style={{ height: '90%' }}></div>
+                  <div className="w-1/6 bg-teal-100 rounded-t" style={{ height: "30%" }}></div>
+                  <div className="w-1/6 bg-teal-200 rounded-t" style={{ height: "50%" }}></div>
+                  <div className="w-1/6 bg-teal-300 rounded-t" style={{ height: "40%" }}></div>
+                  <div className="w-1/6 bg-teal-400 rounded-t" style={{ height: "70%" }}></div>
+                  <div className="w-1/6 bg-teal-500 rounded-t" style={{ height: "60%" }}></div>
+                  <div className="w-1/6 bg-teal-600 rounded-t" style={{ height: "90%" }}></div>
                 </div>
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                   <span>Jul</span>
@@ -456,7 +469,7 @@ export function DashboardPage() {
                   <p className="text-sm text-gray-600">Team B fixed water main leak at 123 Oak Street</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <div className="bg-blue-100 p-2 rounded-full">
                   <UsersIcon className="h-4 w-4 text-blue-600" />
@@ -469,7 +482,7 @@ export function DashboardPage() {
                   <p className="text-sm text-gray-600">Team C assigned to critical leak report #52</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <div className="bg-amber-100 p-2 rounded-full">
                   <AlertCircleIcon className="h-4 w-4 text-amber-600" />
@@ -482,7 +495,7 @@ export function DashboardPage() {
                   <p className="text-sm text-gray-600">High severity leak reported at 456 Main Street</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <div className="bg-teal-100 p-2 rounded-full">
                   <MapPinIcon className="h-4 w-4 text-teal-600" />
@@ -495,8 +508,11 @@ export function DashboardPage() {
                   <p className="text-sm text-gray-600">Downtown District priority increased to Critical</p>
                 </div>
               </div>
-              
-              <Link href="#" className="flex items-center justify-center text-sm text-teal-600 hover:text-teal-700 font-medium mt-2">
+
+              <Link
+                href="#"
+                className="flex items-center justify-center text-sm text-teal-600 hover:text-teal-700 font-medium mt-2"
+              >
                 View All Activities
                 <ChevronRightIcon className="h-4 w-4 ml-1" />
               </Link>
@@ -520,28 +536,28 @@ export function DashboardPage() {
                   Manage Reports
                 </Button>
               </Link>
-              
+
               <Link href="/admin/teams">
                 <Button variant="outline" className="w-full justify-start">
                   <UsersIcon className="h-4 w-4 mr-2 text-blue-500" />
                   Team Management
                 </Button>
               </Link>
-              
+
               <Link href="/admin/zones">
                 <Button variant="outline" className="w-full justify-start">
                   <MapPinIcon className="h-4 w-4 mr-2 text-teal-500" />
                   Zone Settings
                 </Button>
               </Link>
-              
+
               <Link href="/admin/analytics">
                 <Button variant="outline" className="w-full justify-start">
                   <TrendingUpIcon className="h-4 w-4 mr-2 text-purple-500" />
                   Analytics Dashboard
                 </Button>
               </Link>
-              
+
               <div className="pt-4 mt-4 border-t border-gray-100">
                 <h3 className="text-sm font-medium mb-2">System Status</h3>
                 <div className="flex flex-col gap-2">
@@ -573,5 +589,5 @@ export function DashboardPage() {
         </Card>
       </div>
     </AdminLayout>
-  );
+  )
 }

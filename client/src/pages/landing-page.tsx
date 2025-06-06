@@ -1,7 +1,7 @@
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Droplet } from "lucide-react";
+import { Link } from "wouter"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Droplet } from "lucide-react"
 
 export default function LandingPage() {
   return (
@@ -14,11 +14,10 @@ export default function LandingPage() {
               SmartFlow
             </h1>
           </div>
-          <h2 className="text-2xl font-semibold tracking-tight mb-2">
-            Water Leak Reporting and Management Platform
-          </h2>
+          <h2 className="text-2xl font-semibold tracking-tight mb-2">Water Leak Reporting and Management Platform</h2>
           <p className="text-muted-foreground max-w-2xl">
-            Our integrated platform helps communities identify, report, and manage water leaks efficiently. Choose your path below:
+            Our integrated platform helps communities identify, report, and manage water leaks efficiently. Choose your
+            path below:
           </p>
         </div>
 
@@ -27,9 +26,7 @@ export default function LandingPage() {
           <Card className="border-2 border-blue-200 dark:border-blue-800 shadow-lg hover:shadow-xl transition-all">
             <CardHeader>
               <CardTitle className="text-xl text-blue-700 dark:text-blue-300">Leak Reporting Application</CardTitle>
-              <CardDescription>
-                For community members to report water leaks and track repair progress
-              </CardDescription>
+              <CardDescription>For community members to report water leaks and track repair progress</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col space-y-4">
@@ -47,9 +44,7 @@ export default function LandingPage() {
             </CardContent>
             <CardFooter>
               <Link href="/map">
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                  Access Reporting Application
-                </Button>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700">Access Reporting Application</Button>
               </Link>
             </CardFooter>
           </Card>
@@ -58,9 +53,7 @@ export default function LandingPage() {
           <Card className="border-2 border-teal-200 dark:border-teal-800 shadow-lg hover:shadow-xl transition-all">
             <CardHeader>
               <CardTitle className="text-xl text-teal-700 dark:text-teal-300">Administration Dashboard</CardTitle>
-              <CardDescription>
-                For water utility staff to manage leaks, teams, and resources
-              </CardDescription>
+              <CardDescription>For water utility staff to manage leaks, teams, and resources</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col space-y-4">
@@ -78,9 +71,7 @@ export default function LandingPage() {
             </CardContent>
             <CardFooter>
               <Link href="/admin">
-                <Button className="w-full bg-teal-600 hover:bg-teal-700">
-                  Access Administration Dashboard
-                </Button>
+                <Button className="w-full bg-teal-600 hover:bg-teal-700">Access Administration Dashboard</Button>
               </Link>
             </CardFooter>
           </Card>
@@ -92,5 +83,5 @@ export default function LandingPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
