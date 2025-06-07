@@ -1,5 +1,10 @@
 # ***```SmartFlow Decision-Making Platform```***
 
+<p align="center">
+  <img src="Smart_Flow-QATRA-main/generated-icon.png" alt="alt text" width="200" height="200">
+</p>
+
+
 ## ```Overview```
 
 ### **SmartFlow** is a full-stack, government-grade decision-making platform that connects with the SmartFlow Reporting App to process, visualize, and act on water leakage reports submitted by citizens. It empowers government agencies to monitor leaks in real-time, assign resources, plan interventions, and analyze trends for infrastructure planning and urban water management.
