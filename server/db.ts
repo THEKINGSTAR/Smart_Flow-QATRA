@@ -1,13 +1,8 @@
 import { MongoClient, type Db } from "mongodb"
 
-// MongoDB connection string
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/smartflow"
-
-// MongoDB client
 let client: MongoClient
 let db: Db
 
-// Connect to MongoDB
 export async function connectToDatabase() {
   if (db) return { client, db }
 
@@ -16,8 +11,9 @@ export async function connectToDatabase() {
   }
 
   try {
-    client = await MongoClient.connect(process.env.MONGODB_URI)
-    db = client.db()
+    client = new MongoClient(process.env.MONGODB_URI)
+    await client.connect()
+    db = client.db("smartflow_qatra")
     console.log("Connected to MongoDB")
     return { client, db }
   } catch (error) {
@@ -26,42 +22,15 @@ export async function connectToDatabase() {
   }
 }
 
-// Get MongoDB database instance
-export async function getDb() {
-  if (!db) {
-    await connectToDatabase()
-  }
-  return db
-}
-
-// Collection names
-export const COLLECTIONS = {
-  USERS: "users",
-  REPORTS: "reports",
-  OFFLINE_REPORTS: "offline_reports",
-  TIPS: "tips",
-  ACHIEVEMENTS: "achievements",
-  USER_ACHIEVEMENTS: "user_achievements",
-  NOTIFICATIONS: "notifications",
-  ZONES: "zones",
-  REPORTS_TO_ZONES: "reports_to_zones",
-  TEAMS: "teams",
-  TEAM_ASSIGNMENTS: "team_assignments",
-  ADMIN_USERS: "admin_users",
-}
-
-// Initialize database with indexes
 export async function initializeDatabase() {
-  const db = await getDb()
+  const { db } = await connectToDatabase()
 
-  // Create indexes
-  await db.collection(COLLECTIONS.USERS).createIndex({ username: 1 }, { unique: true })
-  await db.collection(COLLECTIONS.USERS).createIndex({ oauthProvider: 1, oauthId: 1 })
-
-  // Other indexes as needed
-  await db.collection(COLLECTIONS.REPORTS).createIndex({ userId: 1 })
-  await db.collection(COLLECTIONS.NOTIFICATIONS).createIndex({ userId: 1 })
-  await db.collection(COLLECTIONS.USER_ACHIEVEMENTS).createIndex({ userId: 1 })
+  // Create indexes for better performance
+  await db.collection("users").createIndex({ username: 1 }, { unique: true })
+  await db.collection("users").createIndex({ email: 1 }, { unique: true, sparse: true })
+  await db.collection("users").createIndex({ oauthProvider: 1, oauthId: 1 }, { unique: true, sparse: true })
+  await db.collection("reports").createIndex({ userId: 1 })
+  await db.collection("reports").createIndex({ createdAt: -1 })
 
   console.log("Database initialized with indexes")
 }

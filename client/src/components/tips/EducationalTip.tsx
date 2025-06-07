@@ -4,7 +4,15 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useQuery } from "@tanstack/react-query"
-import type { Tip } from "@shared/schema"
+
+// Inline type definition instead of importing from @shared/schema
+interface Tip {
+  id: number
+  title: string
+  content: string
+  category?: string
+  createdAt: Date
+}
 
 export default function EducationalTip() {
   const [showTip, setShowTip] = useState(true)

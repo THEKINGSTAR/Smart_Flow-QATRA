@@ -3,7 +3,20 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import type { Report } from "@shared/schema"
+
+// Inline type definition instead of importing from @shared/schema
+interface Report {
+  id: number
+  title: string
+  description: string
+  address: string
+  latitude: string
+  longitude: string
+  severity: "minor" | "moderate" | "critical"
+  status: "pending" | "in-progress" | "resolved"
+  photos?: string[]
+  createdAt: Date
+}
 
 interface ActiveReportPanelProps {
   report: Report
@@ -141,7 +154,7 @@ export default function ActiveReportPanel({ report, onClose }: ActiveReportPanel
               {report.photos.map((photo, index) => (
                 <img
                   key={index}
-                  src={photo}
+                  src={photo || "/placeholder.svg"}
                   alt={`Report photo ${index + 1}`}
                   className="h-20 w-20 object-cover rounded mx-1"
                 />

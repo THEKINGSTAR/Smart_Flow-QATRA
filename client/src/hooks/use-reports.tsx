@@ -2,12 +2,42 @@
 
 import { createContext, type ReactNode, useContext, useState, useEffect } from "react"
 import { useQuery, useMutation, type UseMutationResult } from "@tanstack/react-query"
-import { type Report, type InsertReport, insertReportSchema } from "@shared/schema"
-import { apiRequest, queryClient } from "@/lib/queryClient"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
 import { useOfflineStorage } from "@/hooks/use-offline-storage"
 import { z } from "zod"
+
+// Define types locally to avoid import issues
+interface Report {
+  id: number
+  userId?: number
+  title: string
+  description: string
+  address: string
+  latitude: string
+  longitude: string
+  severity: string
+  status: string
+  photos: any[]
+  voiceNote?: string
+  anonymous: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+interface InsertReport {
+  userId?: number
+  title: string
+  description: string
+  address: string
+  latitude: string
+  longitude: string
+  severity: string
+  status?: string
+  photos?: any[]
+  voiceNote?: string
+  anonymous?: boolean
+}
 
 interface ReportsContextType {
   reports: Report[]
@@ -21,10 +51,35 @@ interface ReportsContextType {
 
 const ReportsContext = createContext<ReportsContextType | null>(null)
 
-// Define a validation schema for reports
-export const reportFormSchema = insertReportSchema.extend({
+// Define validation schema
+export const reportFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  address: z.string().min(1, "Address is required"),
+  latitude: z.string(),
+  longitude: z.string(),
+  severity: z.enum(["minor", "moderate", "critical"]),
   photos: z.array(z.string()).optional(),
+  voiceNote: z.string().optional(),
+  anonymous: z.boolean().optional(),
 })
+
+async function apiRequest(method: string, url: string, data?: any) {
+  const response = await fetch(url, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: data ? JSON.stringify(data) : undefined,
+    credentials: "include",
+  })
+
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.statusText}`)
+  }
+
+  return response.json()
+}
 
 export const ReportsProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast()
@@ -35,34 +90,29 @@ export const ReportsProvider = ({ children }: { children: ReactNode }) => {
   // Get all reports
   const { data: reports = [], isLoading: isLoadingReports } = useQuery<Report[]>({
     queryKey: ["/api/reports"],
-    staleTime: 60000, // 1 minute
+    queryFn: () => apiRequest("GET", "/api/reports"),
+    staleTime: 60000,
   })
 
   // Get user reports if authenticated
   const { data: userReports = [] } = useQuery<Report[]>({
     queryKey: ["/api/user/reports"],
+    queryFn: () => apiRequest("GET", "/api/user/reports"),
     enabled: !!user,
-    staleTime: 60000, // 1 minute
+    staleTime: 60000,
   })
 
   // Submit a new report
   const submitReportMutation = useMutation({
     mutationFn: async (reportData: InsertReport) => {
-      // Check if online
       if (navigator.onLine) {
-        const res = await apiRequest("POST", "/api/reports", reportData)
-        return await res.json()
+        return await apiRequest("POST", "/api/reports", reportData)
       } else {
-        // Save for offline submission
         await saveOfflineReport({ reportData })
         throw new Error("You're offline. Report saved and will be submitted when you're back online.")
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/reports"] })
-      if (user) {
-        queryClient.invalidateQueries({ queryKey: ["/api/user/reports"] })
-      }
       toast({
         title: "Report submitted",
         description: "Thank you for your report. It has been submitted successfully.",
@@ -87,14 +137,9 @@ export const ReportsProvider = ({ children }: { children: ReactNode }) => {
   // Update report status
   const updateReportStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const res = await apiRequest("PATCH", `/api/reports/${id}/status`, { status })
-      return await res.json()
+      return await apiRequest("PATCH", `/api/reports/${id}/status`, { status })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/reports"] })
-      if (user) {
-        queryClient.invalidateQueries({ queryKey: ["/api/user/reports"] })
-      }
       toast({
         title: "Status updated",
         description: "The report status has been updated successfully.",
@@ -109,7 +154,6 @@ export const ReportsProvider = ({ children }: { children: ReactNode }) => {
     },
   })
 
-  // Effect to sync offline reports when coming back online
   useEffect(() => {
     const handleOnline = () => {
       syncOfflineReports().catch((error) => {

@@ -1,10 +1,10 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
-import themePlugin from "@replit/vite-plugin-shadcn-theme-json"
 import path from "path"
+import themePlugin from "@replit/vite-plugin-shadcn-theme-json"
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal"
 
-export default defineConfig({
+const viteConfig = defineConfig({
   plugins: [
     react(),
     runtimeErrorOverlay(),
@@ -15,9 +15,15 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
+      "@": path.resolve(__dirname, "./client/src"),
+      // Remove any @shared alias that might be causing issues
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+    },
+  },
+  server: {
+    proxy: {
+      "/api": "http://localhost:3000",
+      "/auth": "http://localhost:3000",
     },
   },
   root: path.resolve(import.meta.dirname, "client"),
@@ -26,3 +32,5 @@ export default defineConfig({
     emptyOutDir: true,
   },
 })
+
+export default viteConfig

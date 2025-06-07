@@ -3,7 +3,20 @@
 import { useMemo } from "react"
 import { Marker, Tooltip } from "react-leaflet"
 import L from "leaflet"
-import type { Report } from "@shared/schema"
+
+// Inline type definition instead of importing from @shared/schema
+interface Report {
+  id: number
+  title: string
+  description: string
+  address: string
+  latitude: string
+  longitude: string
+  severity: "minor" | "moderate" | "critical"
+  status: "pending" | "in-progress" | "resolved"
+  photos?: string[]
+  createdAt: Date
+}
 
 interface ReportMarkerProps {
   report: Report

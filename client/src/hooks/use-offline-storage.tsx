@@ -1,9 +1,30 @@
 "use client"
 
 import { createContext, type ReactNode, useContext, useState, useEffect } from "react"
-import { apiRequest, queryClient } from "@/lib/queryClient"
-import type { InsertOfflineReport, InsertReport } from "@shared/schema"
 import { useToast } from "@/hooks/use-toast"
+
+// Define types locally to avoid import issues
+interface OfflineReportData {
+  title: string
+  description: string
+  address: string
+  latitude: string
+  longitude: string
+  severity: string
+  photos?: any[]
+  voiceNote?: string
+  anonymous?: boolean
+}
+
+interface OfflineReport {
+  id: number
+  reportData: OfflineReportData
+  createdAt: Date
+}
+
+interface InsertOfflineReport {
+  reportData: OfflineReportData
+}
 
 interface OfflineStorageContextType {
   isOffline: boolean
@@ -33,7 +54,6 @@ async function initDB() {
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result
 
-      // Create object stores
       if (!db.objectStoreNames.contains(REPORTS_STORE)) {
         db.createObjectStore(REPORTS_STORE, { keyPath: "id", autoIncrement: true })
       }
@@ -46,7 +66,6 @@ export function OfflineStorageProvider({ children }: { children: ReactNode }) {
   const [pendingReports, setPendingReports] = useState(0)
   const { toast } = useToast()
 
-  // Update online/offline status
   useEffect(() => {
     function handleOnline() {
       setIsOffline(false)
@@ -54,7 +73,6 @@ export function OfflineStorageProvider({ children }: { children: ReactNode }) {
         title: "You're back online",
         description: pendingReports > 0 ? `Syncing ${pendingReports} pending reports...` : "All data is up to date.",
       })
-
       syncOfflineReports().catch(console.error)
     }
 
@@ -76,12 +94,10 @@ export function OfflineStorageProvider({ children }: { children: ReactNode }) {
     }
   }, [pendingReports, toast])
 
-  // Count pending reports on mount
   useEffect(() => {
     countPendingReports().catch(console.error)
   }, [])
 
-  // Save report to IndexedDB for offline storage
   async function saveOfflineReport(offlineReport: InsertOfflineReport): Promise<void> {
     try {
       const db = await initDB()
@@ -106,7 +122,6 @@ export function OfflineStorageProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Count pending reports
   async function countPendingReports(): Promise<void> {
     try {
       const db = await initDB()
@@ -130,8 +145,51 @@ export function OfflineStorageProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Get all pending reports
-  async function getPendingReports(): Promise<InsertOfflineReport[]> {
+  async function syncOfflineReports(): Promise<void> {
+    if (!navigator.onLine) {
+      return
+    }
+
+    try {
+      const offlineReports = await getPendingReports()
+      if (offlineReports.length === 0) {
+        return
+      }
+
+      for (const offlineReport of offlineReports) {
+        try {
+          const response = await fetch("/api/reports", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(offlineReport.reportData),
+            credentials: "include",
+          })
+
+          if (response.ok) {
+            await deleteOfflineReport(offlineReport.id)
+          }
+        } catch (error) {
+          console.error("Failed to sync report:", error)
+        }
+      }
+
+      toast({
+        title: "Sync complete",
+        description: `Successfully synced ${offlineReports.length} reports.`,
+      })
+    } catch (error) {
+      console.error("Failed to sync offline reports:", error)
+      toast({
+        title: "Sync failed",
+        description: "Failed to sync some offline reports. Will try again later.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  async function getPendingReports(): Promise<OfflineReport[]> {
     try {
       const db = await initDB()
       return new Promise((resolve, reject) => {
@@ -154,7 +212,6 @@ export function OfflineStorageProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Delete a report from IndexedDB
   async function deleteOfflineReport(id: number): Promise<void> {
     try {
       const db = await initDB()
@@ -176,48 +233,6 @@ export function OfflineStorageProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("IndexedDB error:", error)
       throw error
-    }
-  }
-
-  // Sync all offline reports
-  async function syncOfflineReports(): Promise<void> {
-    if (!navigator.onLine) {
-      return
-    }
-
-    try {
-      const offlineReports = await getPendingReports()
-      if (offlineReports.length === 0) {
-        return
-      }
-
-      // Process each pending report sequentially
-      for (const offlineReport of offlineReports) {
-        try {
-          const reportData = offlineReport.reportData as InsertReport
-          await apiRequest("POST", "/api/reports", reportData)
-          await deleteOfflineReport(offlineReport.id)
-        } catch (error) {
-          console.error("Failed to sync report:", error)
-          // Continue with other reports even if one fails
-        }
-      }
-
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/reports"] })
-      queryClient.invalidateQueries({ queryKey: ["/api/user/reports"] })
-
-      toast({
-        title: "Sync complete",
-        description: `Successfully synced ${offlineReports.length} reports.`,
-      })
-    } catch (error) {
-      console.error("Failed to sync offline reports:", error)
-      toast({
-        title: "Sync failed",
-        description: "Failed to sync some offline reports. Will try again later.",
-        variant: "destructive",
-      })
     }
   }
 

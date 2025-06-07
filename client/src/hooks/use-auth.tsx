@@ -1,30 +1,13 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { z } from "zod"
-import { apiRequest } from "../lib/queryClient"
 
-// Define schemas for login and registration
-export const loginSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-})
-
-export const registerSchema = z
-  .object({
-    username: z.string().min(3, "Username must be at least 3 characters"),
-    email: z.string().email("Please enter a valid email"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  })
-
-// Define user type
-export interface User {
+import { useState, useEffect, createContext, useContext } from "react"
+import { useNavigate } from "react-router-dom"
+import { api } from "../api"
+// Remove import from @shared/schema
+// Add inline interface
+interface User {
   id: number
   username: string
   email?: string
@@ -32,49 +15,32 @@ export interface User {
   oauthProvider?: string
 }
 
-// Define auth context type
-interface AuthContextType {
+interface AuthContextProps {
   user: User | null
-  isLoading: boolean
-  isAuthenticated: boolean
-  isAdmin: boolean
-  adminRole: string | null
-  login: (username: string, password: string) => Promise<void>
-  register: (username: string, password: string, email: string) => Promise<void>
+  login: (userData: User) => Promise<void>
   logout: () => Promise<void>
-  checkAdminStatus: () => Promise<void>
+  isLoading: boolean
 }
 
-// Create auth context
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextProps>({
+  user: null,
+  login: async () => {},
+  logout: async () => {},
+  isLoading: true,
+})
 
-// Auth provider props
-interface AuthProviderProps {
-  children: ReactNode
-}
-
-// Auth provider component
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [adminRole, setAdminRole] = useState<string | null>(null)
+  const navigate = useNavigate()
 
-  // Check if user is authenticated on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await apiRequest("/auth/user", {
-          method: "GET",
-          credentials: "include",
-        })
-
-        if (response.user) {
-          setUser(response.user)
-          checkAdminStatus()
-        }
+        const response = await api.get<User>("/auth/me")
+        setUser(response.data)
       } catch (error) {
-        console.error("Auth check error:", error)
+        setUser(null)
       } finally {
         setIsLoading(false)
       }
@@ -83,111 +49,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuth()
   }, [])
 
-  // Login function
-  const login = async (username: string, password: string) => {
-    setIsLoading(true)
+  const login = async (userData: User) => {
     try {
-      const response = await apiRequest("/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-        credentials: "include",
-      })
-
-      setUser(response.user)
-      await checkAdminStatus()
+      await api.post("/auth/login", userData)
+      const response = await api.get<User>("/auth/me")
+      setUser(response.data)
+      navigate("/dashboard")
     } catch (error) {
-      console.error("Login error:", error)
+      console.error("Login failed:", error)
       throw error
-    } finally {
-      setIsLoading(false)
     }
   }
 
-  // Register function
-  const register = async (username: string, password: string, email: string) => {
-    setIsLoading(true)
-    try {
-      const response = await apiRequest("/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password, email }),
-        credentials: "include",
-      })
-
-      setUser(response.user)
-    } catch (error) {
-      console.error("Registration error:", error)
-      throw error
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Logout function
   const logout = async () => {
-    setIsLoading(true)
     try {
-      await apiRequest("/auth/logout", {
-        method: "GET",
-        credentials: "include",
-      })
-
+      await api.post("/auth/logout")
       setUser(null)
-      setIsAdmin(false)
-      setAdminRole(null)
+      navigate("/login")
     } catch (error) {
-      console.error("Logout error:", error)
-    } finally {
-      setIsLoading(false)
+      console.error("Logout failed:", error)
     }
   }
 
-  // Check if user is admin
-  const checkAdminStatus = async () => {
-    try {
-      const response = await apiRequest("/auth/admin", {
-        method: "GET",
-        credentials: "include",
-      })
-
-      setIsAdmin(response.isAdmin)
-      setAdminRole(response.role || null)
-    } catch (error) {
-      console.error("Admin check error:", error)
-      setIsAdmin(false)
-      setAdminRole(null)
-    }
+  const value: AuthContextProps = {
+    user,
+    login,
+    logout,
+    isLoading,
   }
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        isAuthenticated: !!user,
-        isAdmin,
-        adminRole,
-        login,
-        register,
-        logout,
-        checkAdminStatus,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{!isLoading && children}</AuthContext.Provider>
 }
 
-// Hook to use auth context
 export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-  return context
+  return useContext(AuthContext)
 }

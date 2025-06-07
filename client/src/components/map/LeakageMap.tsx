@@ -4,11 +4,24 @@ import { useEffect, useRef, useState } from "react"
 import { MapContainer, TileLayer, useMap, Marker, Popup } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
-import type { Report } from "@shared/schema"
 import ReportMarker from "./ReportMarker"
 import ActiveReportPanel from "./ActiveReportPanel"
 import { useGeolocation } from "@/hooks/use-geolocation"
 import { Button } from "@/components/ui/button"
+
+// Inline type definition instead of importing from @shared/schema
+interface Report {
+  id: number
+  title: string
+  description: string
+  address: string
+  latitude: string
+  longitude: string
+  severity: "minor" | "moderate" | "critical"
+  status: "pending" | "in-progress" | "resolved"
+  photos?: string[]
+  createdAt: Date
+}
 
 // Override Leaflet's default icon path
 delete L.Icon.Default.prototype._getIconUrl

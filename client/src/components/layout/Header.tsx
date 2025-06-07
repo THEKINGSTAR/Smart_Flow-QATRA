@@ -14,7 +14,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/hooks/use-auth"
 import { cn } from "@/lib/utils"
 import { useQuery } from "@tanstack/react-query"
-import type { Notification } from "@shared/schema"
+
+// Inline type definitions instead of importing from @shared/schema
+interface Notification {
+  id: number
+  message: string
+  read: boolean
+  createdAt: Date
+}
 
 export default function Header() {
   const [location] = useLocation()
