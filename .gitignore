@@ -36,5 +36,11 @@ next-env.d.ts
 node_modules/
 dist/
 build/
+
+auth.ts
 setup-local-dev.js
 start-dev.sh
+
+ server/auth.ts
+scripts/setup-local-dev.js
+scripts/auth.ts
